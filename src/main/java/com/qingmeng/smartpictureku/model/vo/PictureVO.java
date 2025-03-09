@@ -100,6 +100,11 @@ public class PictureVO implements Serializable {
     private UserVO userVO;
 
     /**
+     * 缩略图 url
+     */
+    private String thumbnailUrl;
+
+    /**
      * 封装类转换对象
      * @param pictureVO
      * @return

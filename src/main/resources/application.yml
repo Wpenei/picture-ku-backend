@@ -2,6 +2,10 @@ server:
   port: 8123
   servlet:
     context-path: /api
+    # cookie 30 天过期
+    session:
+      cookie:
+        max-age: 604800
 spring:
   profiles:
     active: local
@@ -9,13 +13,23 @@ spring:
     multipart:
       max-file-size: 10MB
   application:
-    name: ${spring.application.name}
+    name: smart-picture-ku
   # 数据库配置
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: ${spring.datasource.url}
     username: ${spring.datasource.url}
     password: ${spring.datasource.url}
+  # Redis 配置
+  redis:
+    database: 0
+    host: localhost
+    port: 6379
+    timeout: 5000
+  session:
+    store-type: redis
+    # Session 30天 过期
+    timeout: 604800
 # mybatis-plus配置
 mybatis-plus:
   configuration:

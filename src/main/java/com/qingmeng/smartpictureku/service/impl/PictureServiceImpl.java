@@ -4,7 +4,6 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.core.util.URLUtil;
-import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -12,10 +11,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.qingmeng.smartpictureku.exception.BusinessException;
 import com.qingmeng.smartpictureku.exception.ErrorCode;
 import com.qingmeng.smartpictureku.exception.ThrowUtils;
-import com.qingmeng.smartpictureku.manager.FileManager;
-import com.qingmeng.smartpictureku.manager.FilePictureUpload;
-import com.qingmeng.smartpictureku.manager.PictureUploadTemplate;
-import com.qingmeng.smartpictureku.manager.UrlPictureUpload;
+import com.qingmeng.smartpictureku.manager.*;
 import com.qingmeng.smartpictureku.model.dto.file.UploadPictureResult;
 import com.qingmeng.smartpictureku.model.dto.picture.PictureQueryRequest;
 import com.qingmeng.smartpictureku.model.dto.picture.PictureReviewRequest;
@@ -29,18 +25,18 @@ import com.qingmeng.smartpictureku.model.vo.PictureVO;
 import com.qingmeng.smartpictureku.service.PictureService;
 import com.qingmeng.smartpictureku.service.UserService;
 import lombok.extern.slf4j.Slf4j;
-import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -65,6 +61,9 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
 
     @Resource
     private FilePictureUpload filePictureUpload;
+
+    @Resource
+    private CosManager cosManager;
 
     /**
      * 上传图片
@@ -105,6 +104,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         UploadPictureResult uploadPictureResult = pictureUploadTemplate.uploadPicture(inputSource, uploadPathPrefix);
         Picture picture = new Picture();
         picture.setUrl(uploadPictureResult.getUrl());
+        // 添加缩略图地址
+        picture.setThumbnailUrl(uploadPictureResult.getThumbnailUrl());
         String picName = uploadPictureResult.getPicName();
         if (pictureUploadRequest != null && StrUtil.isNotBlank(pictureUploadRequest.getPicName())) {
             picName = pictureUploadRequest.getPicName();
@@ -318,6 +319,12 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         }
     }
 
+    /**
+     * 批量上传图片
+     * @param pictureUploadByBatchRequest
+     * @param loginUser
+     * @return
+     */
     @Override
     public Integer uploadPictureByBatch(PictureUploadByBatchRequest pictureUploadByBatchRequest, User loginUser) {
         // 参数校验
@@ -374,7 +381,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
             PictureUploadRequest pictureUploadRequest = new PictureUploadRequest();
             if (StrUtil.isNotBlank(namePrefix)){
                 // 设置图片名称,序号自增
-                pictureUploadRequest.setPicName(namePrefix + (successCount + 1));
+                pictureUploadRequest.setPicName(namePrefix + "-" +(successCount + 1));
             }
             try {
                 PictureVO pictureVO = this.uploadPicture(fileUrl, pictureUploadRequest, loginUser);
@@ -391,6 +398,38 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         return successCount;
     }
 
+    /**
+     * 删除文件
+     * @param oldPicture
+     */
+    @Async
+    @Override
+    public void deletePicture(Picture oldPicture){
+        // 判断图片是否被多条记录使用
+        String pictureUrl = oldPicture.getUrl();
+        String thumbnailUrl = oldPicture.getThumbnailUrl();
+        long count = this.lambdaQuery().eq(Picture::getUrl, pictureUrl).count();
+        if (count > 1){
+            return;
+        }
+        //
+        try {
+            // 获取图片路径(去除域名后的)
+            String urlKey = new URL(pictureUrl).getPath();
+            cosManager.deleteObject(urlKey);
+            // 清理缩略图
+            if (StrUtil.isNotBlank(thumbnailUrl)){
+                String thumbnailKey = new URL(thumbnailUrl).getPath();
+                cosManager.deleteObject(thumbnailKey);
+            }
+        } catch (MalformedURLException e) {
+            log.error("图片Url格式错误",e);
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "对象存储图片删除失败");
+        } catch (Exception e){
+            log.error("对象存储图片删除失败",e);
+        }
+
+    }
 
 }
 

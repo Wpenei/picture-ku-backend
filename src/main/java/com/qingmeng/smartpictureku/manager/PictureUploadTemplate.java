@@ -3,9 +3,12 @@ package com.qingmeng.smartpictureku.manager;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.NumberUtil;
+import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.RandomUtil;
 import com.qcloud.cos.model.PutObjectResult;
+import com.qcloud.cos.model.ciModel.persistence.CIObject;
 import com.qcloud.cos.model.ciModel.persistence.ImageInfo;
+import com.qcloud.cos.model.ciModel.persistence.ProcessResults;
 import com.qingmeng.smartpictureku.config.CosClientConfig;
 import com.qingmeng.smartpictureku.exception.BusinessException;
 import com.qingmeng.smartpictureku.exception.ErrorCode;
@@ -71,19 +74,22 @@ public abstract class PictureUploadTemplate {
             PutObjectResult putObjectResult = cosManager.putPictureObject(uploadPath, file);
             // 获取上传后的图片信息
             ImageInfo imageInfo = putObjectResult.getCiUploadResult().getOriginalInfo().getImageInfo();
-            // 封装返回结果 (自定义返回结果)
-            UploadPictureResult uploadPictureResult = new UploadPictureResult();
-            int width = imageInfo.getWidth();
-            int height = imageInfo.getHeight();
-            double scale = NumberUtil.round( width * 1.0 / height, 2).doubleValue();
-            uploadPictureResult.setUrl(cosClientConfig.getHost()+ "/" + uploadPath);
-            uploadPictureResult.setPicName(updateFileName);
-            uploadPictureResult.setPicSize(FileUtil.size(file));
-            uploadPictureResult.setPicWidth(width);
-            uploadPictureResult.setPicHeight(height);
-            uploadPictureResult.setPicScale(scale);
-            uploadPictureResult.setPicFormat(imageInfo.getFormat());
-            return uploadPictureResult;
+            // 获取压缩后的图片
+            ProcessResults processResults = putObjectResult.getCiUploadResult().getProcessResults();
+            List<CIObject> objectList = processResults.getObjectList();
+            if (ObjUtil.isNotEmpty(objectList)){
+                // 获取压缩后的图片
+                CIObject compressObject = objectList.get(0);
+                // 默认缩略图等于压缩后的图,
+                CIObject thumbnailObject = compressObject;
+                // 有生成缩略图,才设置缩略图
+                if (objectList.size() >1 ){
+                    thumbnailObject = objectList.get(1);
+                }
+                // 封装返回结果
+                return buildResult(originalFilename,compressObject,thumbnailObject);
+            }
+            return buildResult(imageInfo, uploadPath, updateFileName, file);
         } catch (Exception e) {
             log.error("图片上传到对象存储失败",e);
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "图片上传失败");
@@ -92,6 +98,54 @@ public abstract class PictureUploadTemplate {
         }
         // 封装返回结果
     }
+
+    /**
+     * 封装返回结果
+     * @param imageInfo
+     * @param uploadPath
+     * @param updateFileName
+     * @param file
+     * @return
+     */
+    private UploadPictureResult buildResult(ImageInfo imageInfo, String uploadPath, String updateFileName, File file) {
+        // 封装返回结果 (自定义返回结果)
+        UploadPictureResult uploadPictureResult = new UploadPictureResult();
+        int width = imageInfo.getWidth();
+        int height = imageInfo.getHeight();
+        double scale = NumberUtil.round( width * 1.0 / height, 2).doubleValue();
+        uploadPictureResult.setUrl(cosClientConfig.getHost()+ "/" + uploadPath);
+        uploadPictureResult.setPicName(updateFileName);
+        uploadPictureResult.setPicSize(FileUtil.size(file));
+        uploadPictureResult.setPicWidth(width);
+        uploadPictureResult.setPicHeight(height);
+        uploadPictureResult.setPicScale(scale);
+        uploadPictureResult.setPicFormat(imageInfo.getFormat());
+        return uploadPictureResult;
+    }
+
+    /**
+     * 封装返回压缩后的图片信息
+     * @param originFilename
+     * @param compressedCiObject
+     * @return
+     */
+    private UploadPictureResult buildResult(String originFilename, CIObject compressedCiObject,CIObject thumbnailObject) {
+        UploadPictureResult uploadPictureResult = new UploadPictureResult();
+        int picWidth = compressedCiObject.getWidth();
+        int picHeight = compressedCiObject.getHeight();
+        double picScale = NumberUtil.round(picWidth * 1.0 / picHeight, 2).doubleValue();
+        uploadPictureResult.setPicName(FileUtil.mainName(originFilename));
+        uploadPictureResult.setPicWidth(picWidth);
+        uploadPictureResult.setPicHeight(picHeight);
+        uploadPictureResult.setPicScale(picScale);
+        uploadPictureResult.setPicFormat(compressedCiObject.getFormat());
+        uploadPictureResult.setPicSize(compressedCiObject.getSize().longValue());
+        // 设置图片为压缩后的地址
+        uploadPictureResult.setUrl(cosClientConfig.getHost() + "/" + compressedCiObject.getKey());
+        uploadPictureResult.setThumbnailUrl(cosClientConfig.getHost() + "/" + thumbnailObject.getKey());
+        return uploadPictureResult;
+    }
+
 
     /**
      * 校验输入源(本地文件或URL）

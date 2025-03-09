@@ -1,5 +1,7 @@
 package com.qingmeng.smartpictureku.manager;
 
+import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.util.StrUtil;
 import com.qcloud.cos.COSClient;
 import com.qcloud.cos.model.COSObject;
 import com.qcloud.cos.model.GetObjectRequest;
@@ -53,6 +55,15 @@ public class CosManager {
     }
 
     /**
+     * 删除
+     *
+     * @param key 唯一键
+     */
+    public void deleteObject(String key) {
+        cosClient.deleteObject(cosClientConfig.getBucket(),key);
+    }
+
+    /**
      * 上传图片对象
      *
      * @param key  唯一键
@@ -68,7 +79,29 @@ public class CosManager {
         PicOperations picOperations = new PicOperations();
         // 1 表示返回原图信息
         picOperations.setIsPicInfo(1);
+        // 定义一个集合,用来存放图片处理规则
+        List<PicOperations.Rule> ruleList = new ArrayList<>();
+        // 将图片转为webp格式(FileUtil.mainName(key) 获取没有后缀的图片名)
+        String webpKey = FileUtil.mainName(key) + ".webp";
+        // 添加图片压缩规则
+        PicOperations.Rule compressRule = new PicOperations.Rule();
+        compressRule.setFileId(webpKey);
+        compressRule.setRule("imageMogr2/format/webp");
+        compressRule.setBucket(cosClientConfig.getBucket());
+        ruleList.add(compressRule);
+        // 当原图比较小时, 不进行压缩
+        if (file.length() > 2 * 1024){
+            // 缩略图处理
+            PicOperations.Rule thumbnailRule = new PicOperations.Rule();
+            thumbnailRule.setBucket(cosClientConfig.getBucket());
+            String thumbnailKey = FileUtil.mainName(key) + "_thumbnail." + FileUtil.getSuffix(key);
+            thumbnailRule.setFileId(thumbnailKey);
+            // 缩放规则 /thumbnail/<Width>x<Height>> 如果大于原图宽高则不处理
+            thumbnailRule.setRule(String.format("imageMogr2/thumbnail/%sx%s>",256,256));
+            ruleList.add(thumbnailRule);
+        }
         // 构造处理函数
+        picOperations.setRules(ruleList);
         putObjectRequest.setPicOperations(picOperations);
         return cosClient.putObject(putObjectRequest);
     }
