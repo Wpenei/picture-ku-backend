@@ -5,7 +5,7 @@ import lombok.Getter;
 import java.io.Serializable;
 
 /**
- * &#064;description: TODO
+ * &#064;description: 用户登录请求
  * @author Wang
  * &#064;date: 2025/3/1
  */

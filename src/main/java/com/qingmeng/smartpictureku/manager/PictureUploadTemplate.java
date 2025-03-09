@@ -12,7 +12,6 @@ import com.qingmeng.smartpictureku.exception.ErrorCode;
 import com.qingmeng.smartpictureku.exception.ThrowUtils;
 import com.qingmeng.smartpictureku.model.dto.file.UploadPictureResult;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -24,14 +23,13 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * 文件服务
- * @deprecated 已废弃，改为使用 upload 包的模板方法优化
+ * &#064;description: 图片操作类
+ *
+ * @author Wang
+ * &#064;date: 2025/3/5
  */
-
-@Service
-@Deprecated
 @Slf4j
-public class FileManager {
+public abstract class PictureUploadTemplate {
 
     // 1 MB
     private static final long ONE_MB = 1024 * 1024;
@@ -48,26 +46,27 @@ public class FileManager {
     /**
      * 上传图片
      *
-     * @param multipartFile
+     * @param inputSource
      * @param uploadPathPrefix
      * @return
      */
-    public UploadPictureResult uploadPicture(MultipartFile multipartFile, String uploadPathPrefix) {
-        // 校验图片
-        checkPicture(multipartFile);
-        // 编辑图片上传地址(包括路径前缀和文件名,文件名修改为当前日期和uuid随机数,同时拼接上原文件后缀)
+    public UploadPictureResult uploadPicture(Object inputSource, String uploadPathPrefix) {
+        // 1.校验图片
+        checkPicture(inputSource);
+        // 2.图片上传地址
         String uuid = RandomUtil.randomString(8);
-        String originalFilename = multipartFile.getOriginalFilename();
+        // 获取原始文件名
+        String originalFilename = getOriginalFilename(inputSource);
         String updateFileName = String.format("%s_%s.%s", DateUtil.formatDate(new Date()), uuid,
                 FileUtil.getSuffix(originalFilename));
         String uploadPath = String.format("%s/%s", uploadPathPrefix, updateFileName);
         File file = null;
         // 上传图片
         try {
-            // 创建临时文件
+            // 3.创建临时文件
             file = File.createTempFile(uploadPath, null);
-            //将上传的 MultipartFile 文件内容写入到指定的本地临时文件中
-            multipartFile.transferTo(file);
+            // 创建临时文件(本地或Url
+            transferTo(inputSource,file);
             // 上传图片 (根据修改后的路径)
             PutObjectResult putObjectResult = cosManager.putPictureObject(uploadPath, file);
             // 获取上传后的图片信息
@@ -95,20 +94,26 @@ public class FileManager {
     }
 
     /**
-     * 校验文件
-     *
-     * @param multipartFile
+     * 校验输入源(本地文件或URL）
+     * @param inputSource
      */
-    private void checkPicture(MultipartFile multipartFile) {
-        // 判断文件是否为空
-        ThrowUtils.throwIf(multipartFile == null, ErrorCode.PARAMS_ERROR, "文件不能为空");
-        // 1.校验文件大小
-        long fileSize = multipartFile.getSize();
-        ThrowUtils.throwIf(fileSize > ONE_MB * 2, ErrorCode.PARAMS_ERROR, "文件大小不能超过2M");
-        // 2.校验文件后缀
-        String fileSuffix = FileUtil.getSuffix(multipartFile.getOriginalFilename());
-        ThrowUtils.throwIf(!ALLOW_UPLOAD_SUFFIX.contains(fileSuffix), ErrorCode.PARAMS_ERROR, "不支持的文件类型");
-    }
+    protected abstract void checkPicture(Object inputSource);
+
+    /**
+     * 获取输入源的原始文件名
+     * @param inputSource
+     * @return
+     */
+    protected abstract String getOriginalFilename(Object inputSource);
+
+    /**
+     * 处理输入源并生成本地临时文件
+     * @param inputSource
+     * @param file
+     * @throws IOException
+     */
+    protected abstract void transferTo(Object inputSource,File file) throws IOException;
+
 
     /**
      * 删除临时文件
@@ -125,5 +130,4 @@ public class FileManager {
             log.error("文件删除失败,文件地址:{}",file.getAbsolutePath(),e);
         }
     }
-
 }

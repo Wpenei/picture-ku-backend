@@ -3,6 +3,8 @@ package com.qingmeng.smartpictureku.service;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.qingmeng.smartpictureku.model.dto.picture.PictureQueryRequest;
+import com.qingmeng.smartpictureku.model.dto.picture.PictureReviewRequest;
+import com.qingmeng.smartpictureku.model.dto.picture.PictureUploadByBatchRequest;
 import com.qingmeng.smartpictureku.model.dto.picture.PictureUploadRequest;
 import com.qingmeng.smartpictureku.model.entity.Picture;
 import com.baomidou.mybatisplus.extension.service.IService;
@@ -21,12 +23,12 @@ public interface PictureService extends IService<Picture> {
 
     /**
      * 上传图片
-     * @param multipartFile
+     * @param inputSource
      * @param pictureUploadRequest
      * @param loginUser
      * @return
      */
-    PictureVO uploadPicture(MultipartFile multipartFile, PictureUploadRequest pictureUploadRequest, User loginUser);
+    PictureVO uploadPicture(Object inputSource, PictureUploadRequest pictureUploadRequest, User loginUser);
 
     /**
      * 获取查询条件
@@ -55,4 +57,26 @@ public interface PictureService extends IService<Picture> {
      * @param picture
      */
     void validPicture(Picture picture);
+
+    /**
+     * 图片审核
+     * @param pictureReviewRequest
+     * @param loginuser
+     */
+    void doReviewPicture(PictureReviewRequest pictureReviewRequest,User loginuser);
+
+    /**
+     * 补充审核参数
+     * @param picture
+     * @param loginuser
+     */
+    void fillReviewParam(Picture picture,User loginuser);
+
+    /**
+     * 批量上传图片
+     * @param pictureUploadByBatchRequest
+     * @param loginuser
+     * @return
+     */
+    Integer uploadPictureByBatch(PictureUploadByBatchRequest pictureUploadByBatchRequest,User loginuser);
 }

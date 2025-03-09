@@ -3,7 +3,7 @@ package com.qingmeng.smartpictureku.model.dto.file;
 import lombok.Data;
 
 /**
- * &#064;description: TODO
+ * &#064;description: 图片上传请求
  *
  * @author Wang
  * &#064;date: 2025/3/5

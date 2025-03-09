@@ -11,17 +11,17 @@ import lombok.Getter;
  * &#064;version: 1.0
  */
 @Getter
-public enum UserRoleEnum {
+public enum PictureReviewStatusEnum {
 
-    USER("普通用户","user"),
-    VIP("VIP用户","vip"),
-    ADMIN("管理员","admin");
+    REVIEWING("审核中", 0),
+    PASS("通过", 1),
+    REJECT("拒绝", 2);
 
     private final String text;
 
-    private final String value;
+    private final int value;
 
-    UserRoleEnum(String text, String value) {
+    PictureReviewStatusEnum(String text, int value) {
         this.text = text;
         this.value = value;
     }
@@ -32,13 +32,13 @@ public enum UserRoleEnum {
      * @param value 枚举值的value
      * @return 枚举值
      */
-    public static UserRoleEnum getEnumByValue(String value) {
+    public static PictureReviewStatusEnum getEnumByValue(Integer value) {
         if (ObjUtil.isEmpty(value)) {
             return null;
         }
-        for (UserRoleEnum anEnum : UserRoleEnum.values()) {
-            if (anEnum.value.equals(value)) {
-                return anEnum;
+        for (PictureReviewStatusEnum pictureReviewStatusEnum : PictureReviewStatusEnum.values()) {
+            if (pictureReviewStatusEnum.value == value) {
+                return pictureReviewStatusEnum;
             }
         }
         return null;

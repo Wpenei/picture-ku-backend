@@ -10,7 +10,7 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * &#064;description: TODO
+ * &#064;description: 图片响应(过滤后)
  *
  * @author Wang
  * &#064;date: 2025/3/5

@@ -11,23 +11,22 @@ import java.io.Serializable;
  * &#064;date: 2025/3/5
  */
 @Data
-public class PictureUploadRequest implements Serializable {
+public class PictureUploadByBatchRequest implements Serializable {
 
     /**
-     * 图片id(仅用于修改)
+     * 搜索词
      */
-    private long id;
-
-
-    /**
-     * 图片URL
-     */
-    private String fileUrl;
+    private String searchText;
 
     /**
-     * 图片名称
+     * 抓取数量(默认一次 10 条)
      */
-    private String picName;
+    private Integer count = 10;
+
+    /**
+     * 文件名前缀
+     */
+    private String namePrefix;
 
 
     private static final long serialVersionUID = 960147689127316784L;

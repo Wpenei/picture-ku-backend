@@ -6,7 +6,7 @@ import java.io.Serializable;
 import java.util.List;
 
 /**
- * &#064;description: TODO
+ * &#064;description: 图片标签分类响应对象
  *
  * @author Wang
  * &#064;date: 2025/3/6
