@@ -2,10 +2,7 @@ package com.qingmeng.smartpictureku.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.qingmeng.smartpictureku.model.dto.picture.PictureQueryRequest;
-import com.qingmeng.smartpictureku.model.dto.picture.PictureReviewRequest;
-import com.qingmeng.smartpictureku.model.dto.picture.PictureUploadByBatchRequest;
-import com.qingmeng.smartpictureku.model.dto.picture.PictureUploadRequest;
+import com.qingmeng.smartpictureku.model.dto.picture.*;
 import com.qingmeng.smartpictureku.model.entity.Picture;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.qingmeng.smartpictureku.model.entity.User;
@@ -29,6 +26,65 @@ public interface PictureService extends IService<Picture> {
      * @return
      */
     PictureVO uploadPicture(Object inputSource, PictureUploadRequest pictureUploadRequest, User loginUser);
+
+    /**
+     * 图片审核
+     * @param pictureReviewRequest
+     * @param loginuser
+     */
+    void doReviewPicture(PictureReviewRequest pictureReviewRequest,User loginuser);
+
+    /**
+     * 补充审核参数
+     * @param picture
+     * @param loginuser
+     */
+    void fillReviewParam(Picture picture,User loginuser);
+
+    /**
+     * 批量上传图片
+     * @param pictureUploadByBatchRequest
+     * @param loginuser
+     * @return
+     */
+    Integer uploadPictureByBatch(PictureUploadByBatchRequest pictureUploadByBatchRequest,User loginuser);
+
+    /**
+     * 删除图片
+     * @param pictureId
+     * @param loginUser
+     */
+    void deletePicture(long pictureId, User loginUser);
+
+    /**
+     * 异步删除COS文件
+     * @param oldPicture
+     */
+    void clearPictureFile(Picture oldPicture);
+
+    /**
+     * 图片编辑
+     * @param pictureEditRequest
+     * @param loginUser
+     */
+    void editPicture(PictureEditRequest pictureEditRequest,User loginUser);
+
+    /**
+     * 校验图片
+     * @param picture
+     * @return
+     */
+   void checkPictureAuth(Picture picture,User loginUser);
+
+
+
+
+
+
+
+
+
+
 
     /**
      * 获取查询条件
@@ -57,32 +113,4 @@ public interface PictureService extends IService<Picture> {
      * @param picture
      */
     void validPicture(Picture picture);
-
-    /**
-     * 图片审核
-     * @param pictureReviewRequest
-     * @param loginuser
-     */
-    void doReviewPicture(PictureReviewRequest pictureReviewRequest,User loginuser);
-
-    /**
-     * 补充审核参数
-     * @param picture
-     * @param loginuser
-     */
-    void fillReviewParam(Picture picture,User loginuser);
-
-    /**
-     * 批量上传图片
-     * @param pictureUploadByBatchRequest
-     * @param loginuser
-     * @return
-     */
-    Integer uploadPictureByBatch(PictureUploadByBatchRequest pictureUploadByBatchRequest,User loginuser);
-
-    /**
-     * 删除文件
-     * @param oldPicture
-     */
-    void deletePicture(Picture oldPicture);
 }
