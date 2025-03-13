@@ -2,14 +2,14 @@ package com.qingmeng.smartpictureku.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.qingmeng.smartpictureku.model.dto.picture.*;
 import com.qingmeng.smartpictureku.model.entity.Picture;
-import com.baomidou.mybatisplus.extension.service.IService;
 import com.qingmeng.smartpictureku.model.entity.User;
 import com.qingmeng.smartpictureku.model.vo.PictureVO;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
 * @author Wang
@@ -113,4 +113,20 @@ public interface PictureService extends IService<Picture> {
      * @param picture
      */
     void validPicture(Picture picture);
+
+    /**
+     * 根据图片主色调查询图片
+     * @param spaceId
+     * @param picColor
+     * @param loginUser
+     * @return
+     */
+    List<PictureVO> getPictureByColor(Long spaceId, String picColor, User loginUser);
+
+    /**
+     * 图片批量编辑
+     * @param pictureEditByBatchRequest
+     * @param loginUser
+     */
+    void editPictureByBatch(PictureEditByBatchRequest pictureEditByBatchRequest,User loginUser);
 }

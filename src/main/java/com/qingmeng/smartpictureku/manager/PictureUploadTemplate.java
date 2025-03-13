@@ -12,11 +12,8 @@ import com.qcloud.cos.model.ciModel.persistence.ProcessResults;
 import com.qingmeng.smartpictureku.config.CosClientConfig;
 import com.qingmeng.smartpictureku.exception.BusinessException;
 import com.qingmeng.smartpictureku.exception.ErrorCode;
-import com.qingmeng.smartpictureku.exception.ThrowUtils;
 import com.qingmeng.smartpictureku.model.dto.file.UploadPictureResult;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import java.io.File;
@@ -72,6 +69,7 @@ public abstract class PictureUploadTemplate {
             transferTo(inputSource,file);
             // 上传图片 (根据修改后的路径)
             PutObjectResult putObjectResult = cosManager.putPictureObject(uploadPath, file);
+            String picColor = cosManager.getImageMainColor(uploadPath);
             // 获取上传后的图片信息
             ImageInfo imageInfo = putObjectResult.getCiUploadResult().getOriginalInfo().getImageInfo();
             // 获取压缩后的图片
@@ -87,9 +85,9 @@ public abstract class PictureUploadTemplate {
                     thumbnailObject = objectList.get(1);
                 }
                 // 封装返回结果
-                return buildResult(originalFilename,compressObject,thumbnailObject);
+                return buildResult(originalFilename,compressObject,thumbnailObject,picColor);
             }
-            return buildResult(imageInfo, uploadPath, updateFileName, file);
+            return buildResult(imageInfo, uploadPath, updateFileName, file,picColor);
         } catch (Exception e) {
             log.error("图片上传到对象存储失败",e);
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "图片上传失败");
@@ -107,7 +105,7 @@ public abstract class PictureUploadTemplate {
      * @param file
      * @return
      */
-    private UploadPictureResult buildResult(ImageInfo imageInfo, String uploadPath, String updateFileName, File file) {
+    private UploadPictureResult buildResult(ImageInfo imageInfo, String uploadPath, String updateFileName, File file,String picColor) {
         // 封装返回结果 (自定义返回结果)
         UploadPictureResult uploadPictureResult = new UploadPictureResult();
         int width = imageInfo.getWidth();
@@ -120,16 +118,18 @@ public abstract class PictureUploadTemplate {
         uploadPictureResult.setPicHeight(height);
         uploadPictureResult.setPicScale(scale);
         uploadPictureResult.setPicFormat(imageInfo.getFormat());
+        uploadPictureResult.setPicColor(picColor);
         return uploadPictureResult;
     }
 
     /**
      * 封装返回压缩后的图片信息
+     *
      * @param originFilename
      * @param compressedCiObject
      * @return
      */
-    private UploadPictureResult buildResult(String originFilename, CIObject compressedCiObject,CIObject thumbnailObject) {
+    private UploadPictureResult buildResult(String originFilename, CIObject compressedCiObject, CIObject thumbnailObject,String picColor) {
         UploadPictureResult uploadPictureResult = new UploadPictureResult();
         int picWidth = compressedCiObject.getWidth();
         int picHeight = compressedCiObject.getHeight();
@@ -140,6 +140,7 @@ public abstract class PictureUploadTemplate {
         uploadPictureResult.setPicScale(picScale);
         uploadPictureResult.setPicFormat(compressedCiObject.getFormat());
         uploadPictureResult.setPicSize(compressedCiObject.getSize().longValue());
+        uploadPictureResult.setPicColor(picColor);
         // 设置图片为压缩后的地址
         uploadPictureResult.setUrl(cosClientConfig.getHost() + "/" + compressedCiObject.getKey());
         uploadPictureResult.setThumbnailUrl(cosClientConfig.getHost() + "/" + thumbnailObject.getKey());

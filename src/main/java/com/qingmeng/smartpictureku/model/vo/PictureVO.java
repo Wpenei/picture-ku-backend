@@ -109,6 +109,12 @@ public class PictureVO implements Serializable {
      */
     private Long spaceId;
 
+    /**
+     * 图片主色调
+     */
+    private String picColor;
+
+
 
     /**
      * 封装类转换对象

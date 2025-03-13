@@ -48,15 +48,38 @@ public class PictureQueryRequest extends PageRequest implements Serializable {
      */
     private Long picSize;
 
+
     /**
      * 图片宽度
      */
     private Integer picWidth;
 
+
     /**
      * 图片高度
      */
     private Integer picHeight;
+
+//    /**
+//     * 图片最小高度
+//     */
+//    private Integer picMinWidth;
+//
+//    /**
+//     * 图片最大宽度
+//     */
+//    private Integer picMaxWidth;
+//
+//    /**
+//     * 图片最小高度
+//     */
+//    private Integer picMinHeight;
+//
+//    /**
+//     * 图片最大高度
+//     */
+//    private Integer picMaxHeight;
+
 
     /**
      * 图片比例
@@ -101,7 +124,15 @@ public class PictureQueryRequest extends PageRequest implements Serializable {
      */
     private boolean nullSpaceId;
 
+    /**
+     * 编辑开始时间
+     */
+    private Date startEditTime;
 
+    /**
+     * 编辑结束时间
+     */
+    private Date endEditTime;
 
     private static final long serialVersionUID = 960147689127316784L;
 }
