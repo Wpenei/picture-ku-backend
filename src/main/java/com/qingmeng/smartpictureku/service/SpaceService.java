@@ -60,4 +60,5 @@ public interface SpaceService extends IService<Space> {
     void fileSpaceBySpaceLevel(Space space);
 
 
+    void checkSpaceAuth(Space space, User loginUser);
 }

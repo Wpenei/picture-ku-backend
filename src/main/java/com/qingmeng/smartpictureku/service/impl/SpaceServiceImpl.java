@@ -10,13 +10,12 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.qingmeng.smartpictureku.exception.BusinessException;
 import com.qingmeng.smartpictureku.exception.ErrorCode;
 import com.qingmeng.smartpictureku.exception.ThrowUtils;
+import com.qingmeng.smartpictureku.mapper.SpaceMapper;
 import com.qingmeng.smartpictureku.model.dto.space.SpaceAddRequest;
 import com.qingmeng.smartpictureku.model.dto.space.SpaceQueryRequest;
 import com.qingmeng.smartpictureku.model.entity.Space;
-import com.qingmeng.smartpictureku.mapper.SpaceMapper;
 import com.qingmeng.smartpictureku.model.entity.User;
 import com.qingmeng.smartpictureku.model.enums.SpaceLevelEnum;
-import com.qingmeng.smartpictureku.model.enums.UserRoleEnum;
 import com.qingmeng.smartpictureku.model.vo.SpaceVO;
 import com.qingmeng.smartpictureku.service.SpaceService;
 import com.qingmeng.smartpictureku.service.UserService;
@@ -235,6 +234,13 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
             if (space.getMaxSize() == null) {
                 space.setMaxSize(maxSize);
             }
+        }
+    }
+
+    @Override
+    public void checkSpaceAuth(Space space, User loginUser) {
+        if (!userService.isAdmin(loginUser) && !space.getUserId().equals(loginUser.getId())) {
+            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
         }
     }
 

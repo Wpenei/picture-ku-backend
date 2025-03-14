@@ -10,7 +10,10 @@ import com.qingmeng.smartpictureku.constant.UserConstant;
 import com.qingmeng.smartpictureku.exception.BusinessException;
 import com.qingmeng.smartpictureku.exception.ErrorCode;
 import com.qingmeng.smartpictureku.exception.ThrowUtils;
-import com.qingmeng.smartpictureku.model.dto.space.*;
+import com.qingmeng.smartpictureku.model.dto.space.SpaceAddRequest;
+import com.qingmeng.smartpictureku.model.dto.space.SpaceEditRequest;
+import com.qingmeng.smartpictureku.model.dto.space.SpaceQueryRequest;
+import com.qingmeng.smartpictureku.model.dto.space.SpaceUpdateRequest;
 import com.qingmeng.smartpictureku.model.entity.Space;
 import com.qingmeng.smartpictureku.model.entity.User;
 import com.qingmeng.smartpictureku.model.enums.SpaceLevelEnum;
@@ -25,7 +28,6 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * &#064;description:空间接口
@@ -78,10 +80,8 @@ public class SpaceController {
         // 3.判断空间是否存在
         Space space = spaceService.getById(id);
         ThrowUtils.throwIf(space == null, ErrorCode.NOT_FOUND_ERROR);
-        // 4. 判断权限
-        if (!userService.isAdmin(loginUser) && !space.getUserId().equals(loginUser.getId())) {
-            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
-        }
+        // 4. 判断用户\空间权限
+       spaceService.checkSpaceAuth(space, loginUser);
         // 5. 操作数据库
         boolean result = spaceService.removeById(id);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
@@ -107,10 +107,11 @@ public class SpaceController {
         long id = spaceEditRequest.getId();
         Space oldSpace = spaceService.getById(id);
         ThrowUtils.throwIf(oldSpace == null, ErrorCode.NOT_FOUND_ERROR);
-        // 仅空间创建人可编辑
-        if (!oldSpace.getUserId().equals(loginUser.getId())) {
-            throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "不能编辑别人的空间");
-        }
+        // todo 仅空间创建人可编辑
+        //if (!oldSpace.getUserId().equals(loginUser.getId())) {
+        //    throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "不能编辑别人的空间");
+        //}
+        spaceService.checkSpaceAuth(oldSpace, loginUser);
         boolean result = spaceService.updateById(space);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
         return ResultUtils.success(true);

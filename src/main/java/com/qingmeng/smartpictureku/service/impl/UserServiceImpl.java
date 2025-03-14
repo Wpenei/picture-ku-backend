@@ -3,6 +3,7 @@ package com.qingmeng.smartpictureku.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.ObjUtil;
+import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -24,10 +25,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.DigestUtils;
 
 import javax.servlet.http.HttpServletRequest;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static com.qingmeng.smartpictureku.constant.UserConstant.USER_LOGIN_STATE;
@@ -79,14 +78,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         user.setUserAccount(userAccount);
         user.setUserPassword(encryptedPassword);
         user.setUserRole(UserRoleEnum.USER.getValue());
-        user.setUserName("默认用户");
+        user.setUserName("用户_"+ RandomUtil.randomNumbers(8));
         boolean saveResult = this.save(user);
         if (!saveResult) {
             throw new BusinessException(ErrorCode.FORBIDDEN_ERROR,"注册失败，数据库错误");
         }
-
-
-
         // 5.返回新用户ID
         return user.getId();
     }
