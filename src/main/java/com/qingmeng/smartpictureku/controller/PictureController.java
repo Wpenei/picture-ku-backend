@@ -2,11 +2,15 @@ package com.qingmeng.smartpictureku.controller;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.RandomUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.qingmeng.smartpictureku.annotation.AuthCheck;
+import com.qingmeng.smartpictureku.api.aliyunai.AliYunAiApi;
+import com.qingmeng.smartpictureku.api.aliyunai.model.CreateTaskResponse;
+import com.qingmeng.smartpictureku.api.aliyunai.model.GetOutPaintingTaskResponse;
 import com.qingmeng.smartpictureku.common.BaseResponse;
 import com.qingmeng.smartpictureku.common.DeleteRequest;
 import com.qingmeng.smartpictureku.common.ResultUtils;
@@ -24,6 +28,7 @@ import com.qingmeng.smartpictureku.model.vo.PictureVO;
 import com.qingmeng.smartpictureku.service.PictureService;
 import com.qingmeng.smartpictureku.service.SpaceService;
 import com.qingmeng.smartpictureku.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.util.DigestUtils;
@@ -64,6 +69,8 @@ public class PictureController {
                     // 缓存 5 分钟移除
                     .expireAfterWrite(5L, TimeUnit.MINUTES)
                     .build();
+    @Autowired
+    private AliYunAiApi aliYunAiApi;
 
 
     /**
@@ -397,6 +404,34 @@ public class PictureController {
         User loginUser = userService.getLoginUser(request);
         pictureService.editPictureByBatch(pictureEditByBatchRequest, loginUser);
         return ResultUtils.success(true);
+    }
+
+    /**
+     * 创建AI扩图任务接口
+     * @param createPictureOutPaintingTaskRequest ALiYun创建任务请求参数对象
+     * @param request 请求
+     * @return ALiYun 创建任务响应对象
+     */
+    @PostMapping("/out_painting/create_task")
+    public BaseResponse<CreateTaskResponse> createOutPaintingTask(
+            @RequestBody CreatePictureOutPaintingTaskRequest createPictureOutPaintingTaskRequest,
+            HttpServletRequest request) {
+        if (createPictureOutPaintingTaskRequest == null || createPictureOutPaintingTaskRequest.getPictureId() == null){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        User loginUser = userService.getLoginUser(request);
+        CreateTaskResponse response = pictureService.createOutPaintingTask(createPictureOutPaintingTaskRequest, loginUser);
+        return ResultUtils.success(response);
+    }
+
+    /**
+     * 查询任务状态接口
+     */
+    @GetMapping("/out_painting/get_task")
+    public BaseResponse<GetOutPaintingTaskResponse> getOutPaintingTask( String taskId){
+        ThrowUtils.throwIf(StrUtil.isBlank(taskId), ErrorCode.PARAMS_ERROR);
+        GetOutPaintingTaskResponse task = aliYunAiApi.getOutPaintingTask(taskId);
+        return ResultUtils.success(task);
     }
 
 }

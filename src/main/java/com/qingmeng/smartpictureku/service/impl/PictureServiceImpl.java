@@ -9,6 +9,9 @@ import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.qingmeng.smartpictureku.api.aliyunai.AliYunAiApi;
+import com.qingmeng.smartpictureku.api.aliyunai.model.CreateOutPaintingTaskRequest;
+import com.qingmeng.smartpictureku.api.aliyunai.model.CreateTaskResponse;
 import com.qingmeng.smartpictureku.exception.BusinessException;
 import com.qingmeng.smartpictureku.exception.ErrorCode;
 import com.qingmeng.smartpictureku.exception.ThrowUtils;
@@ -33,6 +36,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -81,6 +85,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
 
     @Resource
     private Executor pictureKuExecutor;
+    @Autowired
+    private AliYunAiApi aliYunAiApi;
 
     /**
      * 上传图片
@@ -737,9 +743,36 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         }
 
     }
+
     /**
+     * 创建图片扩容任务
+     * @param createPictureOutPaintingTaskRequest
+     * @param loginUser
+     * @return
+     */
+    @Override
+    public CreateTaskResponse createOutPaintingTask(CreatePictureOutPaintingTaskRequest createPictureOutPaintingTaskRequest, User loginUser) {
+        // 获取图片信息
+        long pictureId = createPictureOutPaintingTaskRequest.getPictureId();
+        Picture picture = Optional.ofNullable(this.getById(pictureId))
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_ERROR, "图片不存在"));
+
+        // 权限校验
+        checkPictureAuth(picture,loginUser);
+        // 构造请求参数
+        CreateOutPaintingTaskRequest taskRequest = new CreateOutPaintingTaskRequest();
+        CreateOutPaintingTaskRequest.InputObject inputObject = new CreateOutPaintingTaskRequest.InputObject();
+        BeanUtil.copyProperties(createPictureOutPaintingTaskRequest,taskRequest);
+        inputObject.setImageUrl(picture.getUrl());
+        taskRequest.setInput(inputObject);
+
+        // 创建任务 并返回
+        return  aliYunAiApi.createOutPaintingTask(taskRequest);
+    }
+
+    /**
+     * 根据名称规则填充图片名称
      * nameRule 格式：图片{序号}
-     *
      * @param pictureList
      * @param nameRule
      */

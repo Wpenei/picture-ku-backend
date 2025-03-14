@@ -89,8 +89,15 @@ public class UrlPictureUpload extends PictureUploadTemplate {
     @Override
     protected String getOriginalFilename(Object inputSource) {
         String fileUrl = (String) inputSource;
+        // 去掉URL中的查询参数
+        int queryIndex = fileUrl.indexOf("?");
+        if (queryIndex != -1) {
+            fileUrl = fileUrl.substring(0, queryIndex);
+        }
         // 从URL中获取名字
         return FileUtil.getName(fileUrl);
+        // 这个返回不带后缀的名字
+        //return FileUtil.mainName(fileUrl);
     }
 
     /**
