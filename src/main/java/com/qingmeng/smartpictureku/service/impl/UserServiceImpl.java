@@ -12,6 +12,7 @@ import com.qingmeng.smartpictureku.constant.UserConstant;
 import com.qingmeng.smartpictureku.exception.BusinessException;
 import com.qingmeng.smartpictureku.exception.ErrorCode;
 import com.qingmeng.smartpictureku.exception.ThrowUtils;
+import com.qingmeng.smartpictureku.manager.auth.StpKit;
 import com.qingmeng.smartpictureku.mapper.UserMapper;
 import com.qingmeng.smartpictureku.model.dto.user.UserQueryRequest;
 import com.qingmeng.smartpictureku.model.entity.User;
@@ -125,6 +126,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         }
         // 4.保存用户的登录态
         request.getSession().setAttribute(USER_LOGIN_STATE, loginUser);
+        // 将用户的登录态同时添加Sa-Token中,便于空间鉴权是使用
+        StpKit.SPACE.login(loginUser.getId());
+        StpKit.SPACE.getSession().set(USER_LOGIN_STATE,loginUser);
         // 5.获取脱敏后的用户信息并返回
         return this.getLoginUserVO(loginUser);
     }
@@ -167,6 +171,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         ThrowUtils.throwIf(userobj == null , ErrorCode.NOT_LOGIN_ERROR);
         // 2.移除Session中保存的登录用户信息
         request.getSession().removeAttribute(USER_LOGIN_STATE);
+        StpKit.SPACE.logout(((User) userobj).getId());
         return true;
     }
 

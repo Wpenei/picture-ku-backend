@@ -6,7 +6,7 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * &#064;description: 登录用户试图
+ * &#064;description: 登录用户视图
  * @author Wang
  * &#064;date: 2025/3/1 21:35
  * &#064;version: 1.0

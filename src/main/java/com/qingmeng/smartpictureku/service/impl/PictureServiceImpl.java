@@ -16,9 +16,9 @@ import com.qingmeng.smartpictureku.exception.BusinessException;
 import com.qingmeng.smartpictureku.exception.ErrorCode;
 import com.qingmeng.smartpictureku.exception.ThrowUtils;
 import com.qingmeng.smartpictureku.manager.CosManager;
-import com.qingmeng.smartpictureku.manager.FilePictureUpload;
-import com.qingmeng.smartpictureku.manager.PictureUploadTemplate;
-import com.qingmeng.smartpictureku.manager.UrlPictureUpload;
+import com.qingmeng.smartpictureku.manager.pictureupload.FilePictureUpload;
+import com.qingmeng.smartpictureku.manager.pictureupload.PictureUploadTemplate;
+import com.qingmeng.smartpictureku.manager.pictureupload.UrlPictureUpload;
 import com.qingmeng.smartpictureku.mapper.PictureMapper;
 import com.qingmeng.smartpictureku.model.dto.file.UploadPictureResult;
 import com.qingmeng.smartpictureku.model.dto.picture.*;
@@ -107,9 +107,10 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
             Space space = spaceService.getById(spaceId);
             ThrowUtils.throwIf(space == null, ErrorCode.NOT_FOUND_ERROR, "该空间不存在");
             // 判断空间是否属于当前用户
-            if (!space.getUserId().equals(loginUser.getId())) {
-                throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "该空间不属于当前用户");
-            }
+            // 改为统一的权限校验
+            //if (!space.getUserId().equals(loginUser.getId())) {
+            //    throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "该空间不属于当前用户");
+            //}
             // 校验空间额度
             if (space.getTotalSize() > space.getMaxSize()) {
                 throw new BusinessException(ErrorCode.OPERATION_ERROR, "空间大小不足");
@@ -130,10 +131,11 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
             Picture oldPicture = this.getById(pictureId);
             ThrowUtils.throwIf(oldPicture == null, ErrorCode.NOT_FOUND_ERROR, "图片不存在");
             // 仅本人或管理员可更新
-            if (!oldPicture.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)) {
-                throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "仅本人或管理员可更新");
-            }
-            // 校验空间是否属于当前用户
+            // 改为统一的权限校验
+            //if (!oldPicture.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)) {
+            //    throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "仅本人或管理员可更新");
+            //}
+            // 校验空间是否一致
             // 没传入 spaceId 则使用原图的spaceId
             if (spaceId == null) {
                 spaceId = oldPicture.getSpaceId();
@@ -151,7 +153,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         if (spaceId == null) {
             uploadPathPrefix = String.format("public/%s", loginUser.getId());
         } else {
-            uploadPathPrefix = String.format("sapce/%s", spaceId);
+            uploadPathPrefix = String.format("space/%s", spaceId);
         }
         // 根据inputSource类型区分上传方式
         PictureUploadTemplate pictureUploadTemplate = filePictureUpload;
@@ -176,6 +178,10 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         picture.setPicFormat(uploadPictureResult.getPicFormat());
         picture.setUserId(loginUser.getId());
         picture.setSpaceId(spaceId);
+        // todo 如果使用分库分表 必须补充空间id为null(公共空间),默认SpaceId为0
+        //if (spaceId == null){
+        //    picture.setSpaceId(0L);
+        //}
         picture.setPicColor(uploadPictureResult.getPicColor());
         // 补充审核参数
         this.fillReviewParam(picture, loginUser);
@@ -348,8 +354,9 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         // 判断是否存在
         Picture oldPicture = this.getById(pictureId);
         ThrowUtils.throwIf(oldPicture == null, ErrorCode.NOT_FOUND_ERROR);
+        // 修改为使用注解鉴权
         // 校验权限
-        checkPictureAuth(oldPicture, loginUser);
+        //checkPictureAuth(oldPicture, loginUser);
         // 开启事务
         transactionTemplate.execute(status -> {
             // 操作数据库
@@ -422,10 +429,17 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         this.validPicture(picture);
         // 判断数据是否存在
         long id = pictureEditRequest.getId();
+
+        // todo 如果使用分库分表,必须添加SpaceId
+        //QueryWrapper<Picture> pictureQueryWrapper = new QueryWrapper<>();
+        //pictureQueryWrapper.eq("id", id);
+        //pictureQueryWrapper.eq("spaceId",spaceId);
+        //boolean result = pictureService.one(picture, pictureQueryWrapper);
         Picture oldPicture = this.getById(id);
         ThrowUtils.throwIf(oldPicture == null, ErrorCode.NOT_FOUND_ERROR);
         // 权限校验
-        this.checkPictureAuth(oldPicture, loginUser);
+        // 修改为使用注解鉴权
+        //this.checkPictureAuth(oldPicture, loginUser);
         // 补充审核参数
         this.fillReviewParam(picture, loginUser);
         boolean result = this.updateById(picture);
@@ -503,6 +517,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
                 .eq(ObjUtil.isNotEmpty(id), Picture::getId, id)
                 .eq(ObjUtil.isNotEmpty(userId), Picture::getUserId, userId)
                 .eq(ObjUtil.isNotEmpty(spaceId), Picture::getSpaceId, spaceId)
+                // todo 如果使用分库分表 那么查询公共图库 需要将SpaceId设为0
+                //.eq(nullSpaceId,Picture::getSpaceId,0)
                 .isNull(nullSpaceId, Picture::getSpaceId)
                 .like(StrUtil.isNotBlank(name), Picture::getName, name)
                 .like(StrUtil.isNotBlank(introduction), Picture::getIntroduction, introduction)
@@ -543,7 +559,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
      * @return
      */
     @Override
-    public PictureVO getPictureVO(Picture picture, HttpServletRequest request) {
+    public PictureVO getPictureVO(Picture picture) {
         ThrowUtils.throwIf(picture == null, ErrorCode.PARAMS_ERROR);
         PictureVO pictureVO = PictureVO.objToVo(picture);
         // 关联查询用户信息
@@ -758,7 +774,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_ERROR, "图片不存在"));
 
         // 权限校验
-        checkPictureAuth(picture,loginUser);
+        // 修改为使用注解鉴权
+        //checkPictureAuth(picture,loginUser);
         // 构造请求参数
         CreateOutPaintingTaskRequest taskRequest = new CreateOutPaintingTaskRequest();
         CreateOutPaintingTaskRequest.InputObject inputObject = new CreateOutPaintingTaskRequest.InputObject();

@@ -1,6 +1,5 @@
 package com.qingmeng.smartpictureku.api.imagesearch.sub;
 
-import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.core.util.URLUtil;

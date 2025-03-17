@@ -1,6 +1,7 @@
 package com.qingmeng.smartpictureku.controller;
 
 import cn.hutool.core.bean.BeanUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.qingmeng.smartpictureku.annotation.AuthCheck;
 import com.qingmeng.smartpictureku.common.BaseResponse;
@@ -10,17 +11,23 @@ import com.qingmeng.smartpictureku.constant.UserConstant;
 import com.qingmeng.smartpictureku.exception.BusinessException;
 import com.qingmeng.smartpictureku.exception.ErrorCode;
 import com.qingmeng.smartpictureku.exception.ThrowUtils;
+import com.qingmeng.smartpictureku.manager.auth.SpaceUserAuthManage;
 import com.qingmeng.smartpictureku.model.dto.space.SpaceAddRequest;
 import com.qingmeng.smartpictureku.model.dto.space.SpaceEditRequest;
 import com.qingmeng.smartpictureku.model.dto.space.SpaceQueryRequest;
 import com.qingmeng.smartpictureku.model.dto.space.SpaceUpdateRequest;
 import com.qingmeng.smartpictureku.model.entity.Space;
+import com.qingmeng.smartpictureku.model.entity.SpaceUser;
 import com.qingmeng.smartpictureku.model.entity.User;
 import com.qingmeng.smartpictureku.model.enums.SpaceLevelEnum;
+import com.qingmeng.smartpictureku.model.enums.SpaceTypeEnum;
 import com.qingmeng.smartpictureku.model.vo.SpaceLevel;
 import com.qingmeng.smartpictureku.model.vo.SpaceVO;
 import com.qingmeng.smartpictureku.service.SpaceService;
+import com.qingmeng.smartpictureku.service.SpaceUserService;
 import com.qingmeng.smartpictureku.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -44,6 +51,14 @@ public class SpaceController {
 
     @Resource
     private SpaceService spaceService;
+
+    @Resource
+    private SpaceUserAuthManage spaceUserAuthManage;
+    @Autowired
+    private SpaceUserService spaceUserService;
+
+    @Resource
+    private TransactionTemplate transactionTemplate;
 
     /**
      * 创建空间
@@ -82,11 +97,17 @@ public class SpaceController {
         ThrowUtils.throwIf(space == null, ErrorCode.NOT_FOUND_ERROR);
         // 4. 判断用户\空间权限
        spaceService.checkSpaceAuth(space, loginUser);
+        if (space.getSpaceType() == SpaceTypeEnum.TEAM.getValue()){
+            // 如果是团队空间, 需删除SpaceUser表中的数据
+            boolean remove = spaceUserService.remove(new LambdaQueryWrapper<SpaceUser>().eq(SpaceUser::getSpaceId, space.getId()));
+            ThrowUtils.throwIf(!remove, ErrorCode.OPERATION_ERROR,"删除空间用户表信息失败");
+        }
         // 5. 操作数据库
         boolean result = spaceService.removeById(id);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
         return ResultUtils.success(true);
     }
+
 
     /**
      * 编辑空间
@@ -181,14 +202,19 @@ public class SpaceController {
      * 根据id获取脱敏后的空间信息
      *
      * @param id
-     * @param request
      * @return
      */
     @GetMapping("/get/vo")
     public BaseResponse<SpaceVO> getSpaceVoById(Long id, HttpServletRequest request) {
         ThrowUtils.throwIf(id == null || id <= 0, ErrorCode.PARAMS_ERROR);
         Space space = spaceService.getById(id);
-        return ResultUtils.success(spaceService.getSpaceVO(space, request));
+        ThrowUtils.throwIf(space == null ,ErrorCode.NOT_FOUND_ERROR,"空间不存在");
+        // 获取到权限列表
+        SpaceVO spaceVO = spaceService.getSpaceVO(space);
+        User loginUser = userService.getLoginUser(request);
+        List<String> permissionsList = spaceUserAuthManage.getPermissionsList(space, loginUser);
+        spaceVO.setPermissionList(permissionsList);
+        return ResultUtils.success(spaceVO);
     }
 
     /**

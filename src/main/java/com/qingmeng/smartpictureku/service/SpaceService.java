@@ -36,7 +36,7 @@ public interface SpaceService extends IService<Space> {
      * @param space
      * @return
      */
-    SpaceVO getSpaceVO(Space space, HttpServletRequest request);
+    SpaceVO getSpaceVO(Space space);
 
     /**
      * 获取分页查询结果(封装后的)
@@ -60,5 +60,10 @@ public interface SpaceService extends IService<Space> {
     void fileSpaceBySpaceLevel(Space space);
 
 
+    /**
+     * 校验空间权限
+     * @param space
+     * @param loginUser
+     */
     void checkSpaceAuth(Space space, User loginUser);
 }

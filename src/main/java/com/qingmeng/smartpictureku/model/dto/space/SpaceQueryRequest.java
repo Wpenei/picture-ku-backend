@@ -1,15 +1,10 @@
 package com.qingmeng.smartpictureku.model.dto.space;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.qingmeng.smartpictureku.common.PageRequest;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.io.Serializable;
-import java.util.Date;
-import java.util.List;
 
 /**
  * &#064;description: 空间分页查询请求
@@ -35,6 +30,11 @@ public class SpaceQueryRequest extends PageRequest implements Serializable {
      * 空间级别：0-普通版 1-专业版 2-旗舰版
      */
     private Integer spaceLevel;
+
+    /**
+     * 空间级别：0-私有空间 1-团队空间
+     */
+    private Integer spaceType;
 
     /**
      * 创建用户 id

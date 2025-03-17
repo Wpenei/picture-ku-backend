@@ -99,7 +99,7 @@ public interface PictureService extends IService<Picture> {
      * @param picture
      * @return
      */
-    PictureVO getPictureVO(Picture picture, HttpServletRequest request);
+    PictureVO getPictureVO(Picture picture);
 
     /**
      * 获取分页查询结果(封装后的)

@@ -1,6 +1,6 @@
 -- 数据库
 create database if not exists picture_ku;
-        use picture_ku;
+use picture_ku;
 
 -- 用户表
 create table if not exists user
@@ -18,7 +18,7 @@ create table if not exists user
     isDelete     tinyint      default 0                 not null comment '是否删除',
     UNIQUE KEY uk_userAccount (userAccount),
     INDEX idx_userName (userName)
-    ) comment '用户' collate = utf8mb4_unicode_ci;
+) comment '用户' collate = utf8mb4_unicode_ci;
 
 -- 图片表
 create table if not exists picture
@@ -28,7 +28,7 @@ create table if not exists picture
     name         varchar(128)                       not null comment '图片名称',
     introduction varchar(512)                       null comment '简介',
     category     varchar(64)                        null comment '分类',
-    tags         varchar(512)                      null comment '标签（JSON 数组）',
+    tags         varchar(512)                       null comment '标签（JSON 数组）',
     picSize      bigint                             null comment '图片体积',
     picWidth     int                                null comment '图片宽度',
     picHeight    int                                null comment '图片高度',
@@ -49,10 +49,10 @@ create table if not exists picture
 -- 添加图片审核字段
 ALTER TABLE picture
     -- 添加新列
-    ADD COLUMN reviewStatus INT DEFAULT 0 NOT NULL COMMENT '审核状态：0-待审核; 1-通过; 2-拒绝',
-    ADD COLUMN reviewMessage VARCHAR(512) NULL COMMENT '审核信息',
-    ADD COLUMN reviewerId BIGINT NULL COMMENT '审核人 ID',
-    ADD COLUMN reviewTime DATETIME NULL COMMENT '审核时间';
+    ADD COLUMN reviewStatus  INT DEFAULT 0 NOT NULL COMMENT '审核状态：0-待审核; 1-通过; 2-拒绝',
+    ADD COLUMN reviewMessage VARCHAR(512)  NULL COMMENT '审核信息',
+    ADD COLUMN reviewerId    BIGINT        NULL COMMENT '审核人 ID',
+    ADD COLUMN reviewTime    DATETIME      NULL COMMENT '审核时间';
 
 -- 创建基于 reviewStatus 列的索引
 CREATE INDEX idx_reviewStatus ON picture (reviewStatus);
@@ -84,7 +84,7 @@ create table if not exists space
 
 -- 图片表中添加新列记录 空间id
 ALTER TABLE picture
-    ADD COLUMN spaceId  bigint  null comment '空间 id（为空表示公共空间）';
+    ADD COLUMN spaceId bigint null comment '空间 id（为空表示公共空间）';
 
 -- 创建索引
 CREATE INDEX idx_spaceId ON picture (spaceId);
@@ -92,3 +92,24 @@ CREATE INDEX idx_spaceId ON picture (spaceId);
 -- 图片表中添加新列记录 图片主色调
 ALTER TABLE picture
     ADD COLUMN picColor varchar(16) null comment '图片主色调';
+
+-- 在空间表中添加一个spaceType字段,用来标识私有空间和公共空间0,1,默认为0
+ALTER TABLE space
+    ADD COLUMN spaceType int default 0 not null comment '空间类型：0-私有空间 1-公共空间';
+-- 并添加索引
+CREATE INDEX idx_spaceType ON space (spaceType);
+
+-- 创建一个空间成员表,其中包括空间id,用户id以及用户在空间中的角色,并对字段添加唯一索引和索引
+-- 空间成员表
+create table if not exists space_user
+(
+    id         bigint auto_increment comment 'id' primary key,
+    spaceId    bigint                             not null comment '空间id',
+    userId     bigint                             not null comment '用户id',
+    spaceRole  int                                not null comment '用户在空间中的角色：0-浏览者 1-编辑者 2-管理员 3-创建人',
+    createTime datetime default CURRENT_TIMESTAMP not null comment '创建时间',
+    updateTime datetime default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
+    unique key uk_spaceId_userId (spaceId, userId),
+    index idx_spaceId (spaceId),
+    index idx_userId (userId)
+) comment '空间用户关联表' collate = utf8mb4_unicode_ci;

@@ -75,9 +75,9 @@ public class AliYunAiApi {
         if (StrUtil.isBlank(taskId)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "扩图任务ID为空");
         }
-        System.out.println("开始查询扩图任务状态,taskId = " + taskId);
+        //System.out.println("开始查询扩图任务状态,taskId = " + taskId);
         String getTaskUrl = String.format(GET_TASK_STATUS_URL, taskId);
-        System.out.println("查询扩图任务状态的URL为: " + getTaskUrl);
+        //System.out.println("查询扩图任务状态的URL为: " + getTaskUrl);
         try (HttpResponse httpResponse = HttpRequest.get(getTaskUrl)
                 // 鉴权信息
                 .header("Authorization", "Bearer " + apiKey)

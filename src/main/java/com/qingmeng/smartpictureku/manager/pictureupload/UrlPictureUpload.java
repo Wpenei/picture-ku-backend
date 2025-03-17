@@ -1,4 +1,4 @@
-package com.qingmeng.smartpictureku.manager;
+package com.qingmeng.smartpictureku.manager.pictureupload;
 
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.StrUtil;

@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 import java.io.Serializable;
 
 /**
- * &#064;description: 用户试图
+ * &#064;description: 用户视图
  * @author Wang
  * &#064;date: 2025/3/2
  */

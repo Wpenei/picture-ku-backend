@@ -1,4 +1,4 @@
-package com.qingmeng.smartpictureku.manager;
+package com.qingmeng.smartpictureku.manager.pictureupload;
 
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
@@ -12,6 +12,7 @@ import com.qcloud.cos.model.ciModel.persistence.ProcessResults;
 import com.qingmeng.smartpictureku.config.CosClientConfig;
 import com.qingmeng.smartpictureku.exception.BusinessException;
 import com.qingmeng.smartpictureku.exception.ErrorCode;
+import com.qingmeng.smartpictureku.manager.CosManager;
 import com.qingmeng.smartpictureku.model.dto.file.UploadPictureResult;
 import lombok.extern.slf4j.Slf4j;
 
@@ -85,7 +86,7 @@ public abstract class PictureUploadTemplate {
                     thumbnailObject = objectList.get(1);
                 }
                 // 封装返回结果
-                return buildResult(originalFilename,compressObject,thumbnailObject,picColor);
+                return buildResult(updateFileName,compressObject,thumbnailObject,picColor);
             }
             return buildResult(imageInfo, uploadPath, updateFileName, file,picColor);
         } catch (Exception e) {
@@ -125,16 +126,16 @@ public abstract class PictureUploadTemplate {
     /**
      * 封装返回压缩后的图片信息
      *
-     * @param originFilename
+     * @param updateFileName
      * @param compressedCiObject
      * @return
      */
-    private UploadPictureResult buildResult(String originFilename, CIObject compressedCiObject, CIObject thumbnailObject,String picColor) {
+    private UploadPictureResult buildResult(String updateFileName, CIObject compressedCiObject, CIObject thumbnailObject,String picColor) {
         UploadPictureResult uploadPictureResult = new UploadPictureResult();
         int picWidth = compressedCiObject.getWidth();
         int picHeight = compressedCiObject.getHeight();
         double picScale = NumberUtil.round(picWidth * 1.0 / picHeight, 2).doubleValue();
-        uploadPictureResult.setPicName(FileUtil.mainName(originFilename));
+        uploadPictureResult.setPicName(updateFileName);
         uploadPictureResult.setPicWidth(picWidth);
         uploadPictureResult.setPicHeight(picHeight);
         uploadPictureResult.setPicScale(picScale);

@@ -2,7 +2,7 @@ server:
   port: 8123
   servlet:
     context-path: /api
-    # cookie 30 天过期
+    # cookie 7 天过期
     session:
       cookie:
         max-age: 604800
@@ -18,18 +18,54 @@ spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/picture_ku
-    username: ${spring.datasource.url}
-    password: ${spring.datasource.url}
+    username: root
+    password: 123456
   # Redis 配置
+  # 空间图片分表
+  shardingsphere:
+    datasource:
+      names: picture_ku
+      picture_ku:
+        type: com.zaxxer.hikari.HikariDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://localhost:3306/picture_ku
+        username: root
+        password: 123456
+    rules:
+      sharding:
+        tables:
+          picture:
+            actual-data-nodes: picture_ku.picture  # 动态分表
+            table-strategy:
+              standard:
+                sharding-column: spaceId # 分表字段 spaceId
+                sharding-algorithm-name: picture_sharding_algorithm  # 使用自定义分片算法
+        sharding-algorithms:
+          picture_sharding_algorithm:
+            type: CLASS_BASED # 配置自定义算法,采用基于自定义类的方式实现
+            props:
+              strategy: standard
+              algorithmClassName: com.qingmeng.smartpictureku.manager.sharding.PictureShardingAlgorithm
+    props:
+      sql-show: true
   redis:
-    database: 0
-    host: localhost
-    port: 6379
-    timeout: 5000
+    database: 1 # Redis数据库索引（默认为0）
+    host: 127.0.0.1 # Redis服务器地址
+    port: 6379 # Redis服务器连接端口
+    timeout: 10s # 连接超时时间
+    lettuce:
+      pool:
+        max-active: 200 # 连接池最大连接数
+        max-wait: -1ms # 连接池最大阻塞等待时间（使用负值表示没有限制）
+        max-idle: 10 # 连接池中的最大空闲连接
+        min-idle: 0 # 连接池中的最小空闲连接
   session:
     store-type: redis
-    # Session 30天 过期
+    # Session 7天 过期
     timeout: 604800
+# Sa-Token 配置
+sa-token:
+  timeout: 604800
 # mybatis-plus配置
 mybatis-plus:
   configuration:
@@ -41,6 +77,7 @@ mybatis-plus:
       logic-delete-field: isDelete # 全局逻辑删除的实体字段名
       logic-delete-value: 1 # 逻辑已删除值（默认为 1）
       logic-not-delete-value: 0 # 逻辑未删除值（默认为 0）
+    enable-sql-runner: true
 # 接口文档配置
 knife4j:
   enable: true

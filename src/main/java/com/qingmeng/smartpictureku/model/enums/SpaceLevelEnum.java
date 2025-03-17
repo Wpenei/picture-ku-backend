@@ -4,7 +4,7 @@ import cn.hutool.core.util.ObjUtil;
 import lombok.Getter;
 
 /**
- * &#064;description: 用户角色枚举
+ * &#064;description: 空间级别枚举
 
  * @author Wang
  * &#064;date: 2025/3/1 19:46
