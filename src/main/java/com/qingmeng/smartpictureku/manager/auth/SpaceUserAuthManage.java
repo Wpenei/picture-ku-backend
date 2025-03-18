@@ -63,7 +63,7 @@ public class SpaceUserAuthManage {
     }
 
     /**
-     * 获取权限列表
+     * 获取当前登录用户在该空间中的权限列表
      */
     public List<String> getPermissionsList(Space space, User loginUser){
         //
@@ -84,14 +84,15 @@ public class SpaceUserAuthManage {
             }
             return new ArrayList<>();
         }
-        // 空间管理员权限
+        // 根据空间类型获取空间类型枚举
         SpaceTypeEnum spaceTypeEnum = SpaceTypeEnum.getEnumByValue(space.getSpaceType());
         if (spaceTypeEnum == null){
             return new ArrayList<>();
         }
+        // 不同类型的空间,校验方法不一致
         switch (spaceTypeEnum) {
             case PRIVATE:
-                // 私有空间
+                // 私有空间 需要校验该空间是否为当前登录用户的
                 if (space.getUserId().equals(loginUser.getId()) || userservice.isAdmin(loginUser)) {
                     return ADMIN_PERMISSION;
                 }
