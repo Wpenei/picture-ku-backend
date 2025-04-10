@@ -6,7 +6,7 @@ target/
 
 ### Eclipse ###
 application-local.yml
-application-dev.yml
+application-prod.yml
 RedisStringTest.java
 ### STS ###
 .apt_generated

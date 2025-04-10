@@ -92,17 +92,17 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
                             .eq(Space::getSpaceType, space.getSpaceType())
                             .exists();
                     // 如果已有空间，就不能再创建
-                    if (exists && space.getSpaceType() == SpaceTypeEnum.PRIVATE.getValue()){
+                    if (exists && space.getSpaceType() == SpaceTypeEnum.PRIVATE.getValue()) {
                         throw new BusinessException(ErrorCode.OPERATION_ERROR, "用户只能创建一个私有空间");
                     }
-                    if (exists && space.getSpaceType() == SpaceTypeEnum.TEAM.getValue()){
+                    if (exists && space.getSpaceType() == SpaceTypeEnum.TEAM.getValue()) {
                         throw new BusinessException(ErrorCode.OPERATION_ERROR, "用户只能创建一个团队空间");
                     }
                     // 操作数据库
                     boolean result = this.save(space);
                     ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "保存空间到数据库失败");
                     // 如果是团队空间,关联创建空间成员记录
-                    if (space.getSpaceType() == SpaceTypeEnum.TEAM.getValue()){
+                    if (space.getSpaceType() == SpaceTypeEnum.TEAM.getValue()) {
                         SpaceUser spaceUser = new SpaceUser();
                         spaceUser.setSpaceId(space.getId());
                         spaceUser.setUserId(userId);
@@ -125,6 +125,7 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
 
     /**
      * 创建空间时构建空间对象
+     *
      * @param spaceAddRequest
      * @param loginUser
      * @return
@@ -134,9 +135,9 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
         Space space = new Space();
         BeanUtil.copyProperties(spaceAddRequest, space);
         if (space.getSpaceName() == null) {
-            if (space.getSpaceType() == SpaceTypeEnum.TEAM.getValue()){
+            if (space.getSpaceType() == SpaceTypeEnum.TEAM.getValue()) {
                 space.setSpaceName(StrUtil.format("{}的团队空间", loginUser.getUserName()));
-            }else {
+            } else {
                 space.setSpaceName(StrUtil.format("{}的私人空间", loginUser.getUserName()));
             }
         }
@@ -305,6 +306,7 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
 
     /**
      * 校验空间权限
+     *
      * @param space
      * @param loginUser
      */
@@ -313,6 +315,15 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
         if (!userService.isAdmin(loginUser) && !space.getUserId().equals(loginUser.getId())) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
         }
+    }
+
+    @Override
+    public SpaceVO getSpaceByUserId(Long userId) {
+        QueryWrapper<Space> spaceQueryWrapper = new QueryWrapper<Space>()
+                .eq("userId", userId)
+                .eq("spaceType", 0);
+        Space space = this.getOne(spaceQueryWrapper);
+        return SpaceVO.objToVo(space);
     }
 
 }

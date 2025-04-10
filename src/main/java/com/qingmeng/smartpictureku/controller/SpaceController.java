@@ -252,4 +252,13 @@ public class SpaceController {
         return ResultUtils.success(spaceLevelList);
     }
 
+    /**
+     * 根据用户id获取空间详情
+     */
+    @GetMapping("/get/by/user")
+    public BaseResponse<SpaceVO> getSpaceByUserId(Long userId){
+        ThrowUtils.throwIf(userId == null || userId <= 0, ErrorCode.PARAMS_ERROR);
+        SpaceVO space = spaceService.getSpaceByUserId(userId);
+        return ResultUtils.success(space);
+    }
 }
