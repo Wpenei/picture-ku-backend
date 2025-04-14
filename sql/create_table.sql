@@ -19,6 +19,11 @@ create table if not exists user
     UNIQUE KEY uk_userAccount (userAccount),
     INDEX idx_userName (userName)
 ) comment '用户' collate = utf8mb4_unicode_ci;
+-- 添加用户邮箱
+ALTER TABLE user
+    ADD COLUMN email VARCHAR(256) NULL COMMENT '用户邮箱',
+    ADD UNIQUE KEY uk_email (email);
+
 
 -- 图片表
 create table if not exists picture

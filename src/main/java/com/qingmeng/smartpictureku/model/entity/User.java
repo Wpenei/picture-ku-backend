@@ -1,14 +1,14 @@
 package com.qingmeng.smartpictureku.model.entity;
 
 
-import java.io.Serializable;
-import java.util.Date;
-
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
+
+import java.io.Serializable;
+import java.util.Date;
 
 /**
  * 用户
@@ -28,6 +28,11 @@ public class User implements Serializable {
      * 账号
      */
     private String userAccount;
+
+    /**
+     * 账号
+     */
+    private String email;
 
     /**
      * 密码

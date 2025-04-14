@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>共享云图库-邮箱验证码</title>
+    <style>
+        .main {
+            margin: 10px auto;
+            width: 520px;
+            border-top: 16px solid #e1f9e8;
+            /*background: #fbf1d7;*/
+            padding: 24px 24px 40px;
+            border-radius: 0 0 16px 16px;
+            box-shadow: 0px 0px 1px;
+        }
+
+        .title {
+            margin: 60px auto 32px;
+            font-size: 32px;
+            font-weight: 600;
+            line-height: 65px;
+            letter-spacing: 0px;
+        }
+
+        .note {
+            margin: 0 auto;
+            font-size: 18px;
+            line-height: 1.4;
+            left: 0px;
+            top: 77px;
+            font-weight: 400;
+        }
+
+        .code {
+            padding: 16px;
+            text-align: center;
+            background: rgba(206, 233, 220, 0.5);
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 24px;
+            line-height: 140%;
+            color: rgba(164, 206, 183, 0.9);
+            margin: 24px 0;
+            letter-spacing: 1px;
+        }
+        .claim {
+            margin-top: 10px;
+            text-align: center;
+            background: rgba(255, 255, 254, 0.99);
+            border-radius: 10px;
+            padding: 20px 0 0;
+        }
+
+        .attention-text {
+            display: inline-block;
+            position: relative;
+        }
+
+        .attention-text::before,
+        .attention-text::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            width: 250px; /* 调整短杠长度 */
+            height: 1px;
+            background: #c4c1c1;
+        }
+
+        .attention-text::before {
+            left: 100%; /* 调整短杠位置 */
+            margin-left:  0px; /* 调整短杠与文字之间的间隔 */
+        }
+
+        .attention-text::after {
+            right: 100%; /* 调整短杠位置 */
+            margin-right:  0px; /* 调整短杠与文字之间的间隔 */
+        }
+
+        .claim ul {
+            font-size: 13px;
+            line-height: 1.6;
+            color: #5c5c5c;
+        }
+
+        .claim ul li {
+            color: rgba(24, 24, 25, 0.42);
+            line-height: 28px;
+            text-align: start;
+        }
+
+        .footer {
+            margin-top: 20px;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #5c5c5c;
+        }
+
+        .title, .note, .claim, .footer {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div class="main">
+    <div class="title">共享云图库 验证码</div>
+    <div class="note">您正在进行邮箱验证操作，验证码为:</div>
+    <div class="code" :data="verify">000000</div>
+    <div class="claim">
+        <ul>
+            <li>此验证码 5 分钟内有效</li>
+            <li>如非本人操作，请忽略本邮件。</li>
+            <li>此邮件由系统自动发送，请勿直接回复。</li>
+        </ul>
+        <div class="attention-text"></div>
+    </div>
+    <div class="footer">
+        <p>如果您有任何问题或需要帮助  🤙 15698693920 </p>
+    </div>
+</div>
+</body>
+</html>

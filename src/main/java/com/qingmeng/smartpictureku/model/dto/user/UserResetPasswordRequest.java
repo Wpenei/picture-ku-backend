@@ -5,13 +5,13 @@ import lombok.Data;
 import java.io.Serializable;
 
 /**
- * &#064;description: 邮箱注册
+ * &#064;description: 忘记密码
 
  * @author Wang
  * &#064;date: 2025/3/1
  */
 @Data
-public class UserRegisterRequest implements Serializable {
+public class UserResetPasswordRequest implements Serializable {
 
     private static final long serialVersionUID = 3330280410710414130L;
 
@@ -21,14 +21,14 @@ public class UserRegisterRequest implements Serializable {
     private String email;
 
     /**
-     * 邮箱验证码
+     * 验证码
      */
     private String code;
 
     /**
      * 密码
      */
-    private String userPassword;
+    private String newPassword;
 
     /**
      * 确认密码
