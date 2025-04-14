@@ -44,6 +44,13 @@ spring:
     store-type: redis
     # Session 7天 过期
     timeout: 604800
+  # 邮箱配置
+  mail:
+    from: ${MAIL_FROM}  # 发件人邮箱
+    password: ${MAIL_PASSWORD}  # 邮箱授权码
+    host: ${MAIL_HOST}  # SMTP服务器地址
+    port: ${MAIL_PORT}  # SMTP服务器端口
+    admin: ${ADMIN_MAIL}  # 管理员邮箱
 # Sa-Token 配置
 sa-token:
   timeout: 604800

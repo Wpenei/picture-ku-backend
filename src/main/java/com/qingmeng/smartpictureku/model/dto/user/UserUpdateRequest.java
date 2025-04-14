@@ -1,6 +1,6 @@
 package com.qingmeng.smartpictureku.model.dto.user;
 
-import lombok.Getter;
+import lombok.Data;
 
 import java.io.Serializable;
 
@@ -10,7 +10,7 @@ import java.io.Serializable;
  * @author Wang
  * &#064;date: 2025/3/2
  */
-@Getter
+@Data
 public class UserUpdateRequest implements Serializable {
     /**
      * id

@@ -6,10 +6,16 @@ package com.qingmeng.smartpictureku.constant;
 * &#064;date: 2025/3/2 15:03
 */
 public interface UserConstant {
+
     /**
      * 用户登录态键
      */
     String USER_LOGIN_STATE = "user_login";
+
+    /**
+     * 用户登录时间
+     */
+    String USER_LOGIN_TIMESTAMP = "login_timestamp";
 
     //  region 权限
 

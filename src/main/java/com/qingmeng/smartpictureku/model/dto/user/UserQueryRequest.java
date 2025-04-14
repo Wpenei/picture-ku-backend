@@ -1,7 +1,8 @@
 package com.qingmeng.smartpictureku.model.dto.user;
 
 import com.qingmeng.smartpictureku.common.PageRequest;
-import lombok.Getter;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.io.Serializable;
 
@@ -11,7 +12,8 @@ import java.io.Serializable;
  * @author Wang
  * &#064;date: 2025/3/2
  */
-@Getter
+@EqualsAndHashCode(callSuper = true)
+@Data
 public class UserQueryRequest extends PageRequest implements Serializable {
     /**
      * id
