@@ -1,13 +1,22 @@
 package com.qingmeng.smartpictureku.constant;
 
 /**
- * 爬虫常量
+ * &#064;description: 爬虫常量
+ *
+ * @author Wang
+ * &#064;date: 2025/4/11
  */
-public class CrawlerConstant {
-    public static final int WARN_COUNT = 30;
-    public static final int BAN_COUNT= 50;
+public interface CrawlerConstant {
+
+    //
+    int WARN_COUNT = 30;
+
+    //
+    int BAN_COUNT= 50;
+
     //封禁角色
-    public static final String BAN_ROLE = "ban";
+    String BAN_ROLE = "ban";
+
     //过期时间
-    public static final int EXPIRE_TIME = 120;
+    int EXPIRE_TIME = 120;
 }
