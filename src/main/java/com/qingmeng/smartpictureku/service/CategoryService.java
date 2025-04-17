@@ -16,7 +16,8 @@ public interface CategoryService extends IService<Category> {
      * 获取分类列表，不传类型默认为图片分类
      */
     default List<String> listCategory() {
-        return listCategoryByType(0);  // 默认图片分类
+        // 默认图片分类
+        return listCategoryByType(0);
     }
 
     /**

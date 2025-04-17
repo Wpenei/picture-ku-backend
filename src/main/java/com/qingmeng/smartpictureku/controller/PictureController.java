@@ -1,7 +1,6 @@
 package com.qingmeng.smartpictureku.controller;
 
 import cn.hutool.core.bean.BeanUtil;
-import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -14,6 +13,7 @@ import com.qingmeng.smartpictureku.api.aliyunai.model.GetOutPaintingTaskResponse
 import com.qingmeng.smartpictureku.common.BaseResponse;
 import com.qingmeng.smartpictureku.common.DeleteRequest;
 import com.qingmeng.smartpictureku.common.ResultUtils;
+import com.qingmeng.smartpictureku.constant.CacheConstant;
 import com.qingmeng.smartpictureku.constant.UserConstant;
 import com.qingmeng.smartpictureku.exception.BusinessException;
 import com.qingmeng.smartpictureku.exception.ErrorCode;
@@ -30,9 +30,9 @@ import com.qingmeng.smartpictureku.model.enums.PictureReviewStatusEnum;
 import com.qingmeng.smartpictureku.model.vo.PictureTagCategory;
 import com.qingmeng.smartpictureku.model.vo.PictureVO;
 import com.qingmeng.smartpictureku.service.*;
+import com.qingmeng.smartpictureku.utils.MultiLevelCacheUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.util.DigestUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -60,6 +60,9 @@ public class PictureController {
 
     @Resource
     private SpaceService spaceService;
+
+    @Resource
+    private MultiLevelCacheUtils multiLevelCacheUtils;
 
     @Resource
     private CategoryService categoryService;
@@ -326,7 +329,7 @@ public class PictureController {
         int current = pictureQueryRequest.getCurrent();
         int pageSize = pictureQueryRequest.getPageSize();
         Long spaceId = pictureQueryRequest.getSpaceId();
-        ThrowUtils.throwIf(pageSize > 20, ErrorCode.PARAMS_ERROR, "查询数据过多");
+        ThrowUtils.throwIf(pageSize > 40, ErrorCode.PARAMS_ERROR, "查询数据过多");
         if (spaceId == null) {
             // 普通用户只能看到过审的图片
             pictureQueryRequest.setReviewStatus(PictureReviewStatusEnum.PASS.getValue());
@@ -351,27 +354,38 @@ public class PictureController {
     /**
      * 获取标签和分类
      *
-     * @return
+     * @return 分类标签对象
      */
     @GetMapping("/tag_category")
     public BaseResponse<PictureTagCategory> listPictureTagCategory() {
         PictureTagCategory pictureTagCategory = new PictureTagCategory();
-        // 查询分类名称列表
-        List<String> categoryList = categoryService.listCategory();
-        // 查询标签名称列表
-        List<String> tagList =  tagService.listTag();
-        pictureTagCategory.setTagList(tagList);
-        pictureTagCategory.setCategoryList(categoryList);
-        return ResultUtils.success(pictureTagCategory);
+        // 1.构建缓存key
+        String cacheKey = CacheConstant.TAG_AND_CATEGORY_KEY;
+        // 从缓存中获取数据
+        PictureTagCategory cacheValue = multiLevelCacheUtils.getCache(cacheKey, PictureTagCategory.class);
+        // 4.缓存未命中,查询数据库
+        if (cacheValue == null){
+            // 查询分类名称列表
+            List<String> categoryList = categoryService.listCategory();
+            // 查询标签名称列表
+            List<String> tagList =  tagService.listTag();
+            pictureTagCategory.setTagList(tagList);
+            pictureTagCategory.setCategoryList(categoryList);
+            String newCacheValue = JSONUtil.toJsonStr(pictureTagCategory);
+            // 将数据添加到缓存中
+            multiLevelCacheUtils.putCache(cacheKey, newCacheValue);
+            return ResultUtils.success(pictureTagCategory);
+        }
+        return ResultUtils.success(cacheValue);
     }
 
 
     /**
      * 从缓存中 分页脱敏后的图片列表
      *
-     * @param pictureQueryRequest
-     * @param request
-     * @return
+     * @param pictureQueryRequest 图片查询请求
+     * @param request 请求
+     * @return 图片分页列表
      */
     @Deprecated // 因为无法控制私有空间的更新频率,暂时不使用
     @PostMapping("/list/page/vo/cache")
@@ -393,37 +407,19 @@ public class PictureController {
         String hashKey = DigestUtils.md5DigestAsHex(queryPicture.getBytes());
         String key = String.format("pictureKu:listPictureVoByPage%s", hashKey);
 
-        // 从本地缓存中获取数据
-        String cacheValue = LOCAL_CACHE.getIfPresent(key);
-        if (cacheValue != null) {
-            // 3.如果缓存命中,返回缓存数据
-            Page<PictureVO> cachePicture = JSONUtil.toBean(cacheValue, Page.class);
-            return ResultUtils.success(cachePicture);
+        Page<PictureVO> cacheValue;
+        cacheValue = multiLevelCacheUtils.getCache(key, Page.class);
+        if (cacheValue == null){
+            // 4.缓存未命中,查询数据库
+            Page<Picture> picturePage = pictureService.page(new Page<>(current, pageSize),
+                    pictureService.getQueryWrapper(pictureQueryRequest));
+            Page<PictureVO> pictureVoPage = pictureService.getPictureVoPage(picturePage, request);
+            String newCacheValue = JSONUtil.toJsonStr(picturePage);
+            // 将数据添加到缓存中
+            multiLevelCacheUtils.putCache(key, newCacheValue);
+            return ResultUtils.success(pictureVoPage);
         }
-        // 2.从Redis 中获取缓存数据
-        ValueOperations<String, String> opsForValue = stringRedisTemplate.opsForValue();
-        String cacheByRedisValue = opsForValue.get(key);
-        if (cacheByRedisValue != null) {
-            // 添加到本地缓存中
-            LOCAL_CACHE.put(key, cacheByRedisValue);
-            // 3.如果缓存命中,返回缓存数据
-            Page<PictureVO> cachePicture = JSONUtil.toBean(cacheByRedisValue, Page.class);
-            return ResultUtils.success(cachePicture);
-        }
-        // 4.缓存未命中,查询数据库
-        Page<Picture> picturePage = pictureService.page(new Page<>(current, pageSize),
-                pictureService.getQueryWrapper(pictureQueryRequest));
-        Page<PictureVO> pictureVoPage = pictureService.getPictureVoPage(picturePage, request);
-        String newCacheValue = JSONUtil.toJsonStr(picturePage);
-
-        // 添加到本地缓存中
-        LOCAL_CACHE.put(key, newCacheValue);
-        // 5.将查询结果存入 redis
-        // 过期时间 设置为 5 ~ 10 分钟, 随机数,防止缓存雪崩
-        int cacheExpireTime = 300 + RandomUtil.randomInt(0, 300);
-        // 添加到 Redis 缓存中
-        opsForValue.set(key, newCacheValue, cacheExpireTime, TimeUnit.SECONDS);
-        return ResultUtils.success(pictureVoPage);
+        return ResultUtils.success(cacheValue);
     }
 
     /**
