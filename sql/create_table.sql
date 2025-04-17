@@ -118,3 +118,15 @@ create table if not exists space_user
     index idx_spaceId (spaceId),
     index idx_userId (userId)
 ) comment '空间用户关联表' collate = utf8mb4_unicode_ci;
+
+-- 标签表
+CREATE TABLE if not exists tag
+(
+    id         bigint AUTO_INCREMENT COMMENT 'id' PRIMARY KEY,
+    tagName    varchar(256)                       NOT NULL COMMENT '标签名称',
+    createTime datetime DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+    editTime   datetime DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '编辑时间',
+    updateTime datetime DEFAULT CURRENT_TIMESTAMP NOT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    isDelete   tinyint  DEFAULT 0                 NOT NULL COMMENT '是否删除'
+)
+    COMMENT '标签' COLLATE = utf8mb4_unicode_ci;
