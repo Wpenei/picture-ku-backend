@@ -29,9 +29,7 @@ import com.qingmeng.smartpictureku.model.entity.User;
 import com.qingmeng.smartpictureku.model.enums.PictureReviewStatusEnum;
 import com.qingmeng.smartpictureku.model.vo.PictureTagCategory;
 import com.qingmeng.smartpictureku.model.vo.PictureVO;
-import com.qingmeng.smartpictureku.service.PictureService;
-import com.qingmeng.smartpictureku.service.SpaceService;
-import com.qingmeng.smartpictureku.service.UserService;
+import com.qingmeng.smartpictureku.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
@@ -41,7 +39,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -63,6 +60,12 @@ public class PictureController {
 
     @Resource
     private SpaceService spaceService;
+
+    @Resource
+    private CategoryService categoryService;
+
+    @Resource
+    private TagService tagService;
 
     @Resource
     private StringRedisTemplate stringRedisTemplate;
@@ -346,15 +349,17 @@ public class PictureController {
     }
 
     /**
-     * 获取预制标签和分类
+     * 获取标签和分类
      *
      * @return
      */
     @GetMapping("/tag_category")
     public BaseResponse<PictureTagCategory> listPictureTagCategory() {
         PictureTagCategory pictureTagCategory = new PictureTagCategory();
-        List<String> tagList = Arrays.asList("热门", "搞笑", "生活", "高清", "艺术", "校园", "背景", "搞怪", "抽象");
-        List<String> categoryList = Arrays.asList("头像", "动漫", "壁纸", "表情包", "素材", "海报");
+        // 查询分类名称列表
+        List<String> categoryList = categoryService.listCategory();
+        // 查询标签名称列表
+        List<String> tagList =  tagService.listTag();
         pictureTagCategory.setTagList(tagList);
         pictureTagCategory.setCategoryList(categoryList);
         return ResultUtils.success(pictureTagCategory);

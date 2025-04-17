@@ -89,16 +89,6 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
     }
 
     /**
-     * 删除标签
-     * @param id 标签ID
-     * @return 删除结果
-     */
-    @Override
-    public Boolean deleteTag(Long id) {
-        return removeById(id);
-    }
-
-    /**
      * 根据标签名称搜索标签
      * @param tagName 标签名称
      * @return 标签VO对象列表

@@ -11,10 +11,7 @@ import com.qingmeng.smartpictureku.exception.ThrowUtils;
 import com.qingmeng.smartpictureku.model.entity.Tag;
 import com.qingmeng.smartpictureku.model.vo.TagVO;
 import com.qingmeng.smartpictureku.service.TagService;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -56,7 +53,7 @@ public class TagController {
      */
     @PostMapping("/add")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-    public BaseResponse<Boolean> addTag(String tagName){
+    public BaseResponse<Boolean> addTag(@RequestParam String tagName){
         ThrowUtils.throwIf(tagName == null || tagName.length() == 0, ErrorCode.PARAMS_ERROR);
         return ResultUtils.success(tagService.addTag(tagName));
     }
@@ -68,9 +65,9 @@ public class TagController {
      */
     @PostMapping("/delete")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-    public BaseResponse<Boolean> deleteTag(Long id){
+    public BaseResponse<Boolean> deleteTag(@RequestParam Long id){
         ThrowUtils.throwIf(id == null, ErrorCode.NOT_FOUND_ERROR);
-        return ResultUtils.success(tagService.deleteTag(id));
+        return ResultUtils.success(tagService.removeById(id));
     }
 
     /**
@@ -80,7 +77,7 @@ public class TagController {
      */
     @PostMapping("/search")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-    public BaseResponse<List<TagVO>> searchTag(String tagName){
+    public BaseResponse<List<TagVO>> searchTag(@RequestParam String tagName){
         ThrowUtils.throwIf(tagName == null || tagName.length() == 0, ErrorCode.NOT_FOUND_ERROR);
         return ResultUtils.success(tagService.searchTag(tagName));
     }

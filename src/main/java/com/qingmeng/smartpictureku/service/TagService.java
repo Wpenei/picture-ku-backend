@@ -41,12 +41,6 @@ public interface TagService extends IService<Tag> {
      */
     Boolean addTag(String tagName);
 
-    /**
-     * 根据标签ID删除标签
-     * @param id 标签ID
-     * @return 删除成功返回true，失败返回false
-     */
-    Boolean deleteTag(Long id);
 
     /**
      * 根据标签名称搜索标签
