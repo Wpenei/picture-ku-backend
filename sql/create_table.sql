@@ -66,6 +66,12 @@ ALTER TABLE picture
     ADD COLUMN thumbnailUrl varchar(512) NULL COMMENT '缩略图 url',
     ADD INDEX idx_thumbnailUrl (thumbnailUrl);
 
+-- 添加点赞数
+ALTER TABLE picture
+    ADD COLUMN likeCount bigint DEFAULT 0 NOT NULL COMMENT '点赞数';
+
+
+
 -- 空间表
 create table if not exists space
 (
@@ -125,7 +131,7 @@ CREATE TABLE category
     id           bigint AUTO_INCREMENT COMMENT '分类id'
         PRIMARY KEY,
     categoryName varchar(256)                       NOT NULL COMMENT '分类名称',
-    type         tinyint  DEFAULT 0                 NOT NULL COMMENT '分类类型：0-图片分类 1-帖子分类',
+    categoryType tinyint  DEFAULT 0                 NOT NULL COMMENT '分类类型：0-图片分类 1-帖子分类',
     createTime   datetime DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
     editTime     datetime DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '分类编辑时间',
     updateTime   datetime DEFAULT CURRENT_TIMESTAMP NOT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '分类更新时间',
@@ -133,8 +139,6 @@ CREATE TABLE category
 )
     COMMENT '分类' COLLATE = utf8mb4_unicode_ci;
 
-ALTER TABLE category
-    CHANGE COLUMN type categoryType tinyint DEFAULT 0 NOT NULL COMMENT '分类类型：0-图片分类 1-帖子分类';
 
 
 -- 标签表
@@ -148,3 +152,21 @@ CREATE TABLE if not exists tag
     isDelete   tinyint  DEFAULT 0                 NOT NULL COMMENT '是否删除'
 )
     COMMENT '标签' COLLATE = utf8mb4_unicode_ci;
+
+CREATE TABLE like_record
+(
+    id            bigint AUTO_INCREMENT COMMENT 'id'   PRIMARY KEY,
+    userId        bigint                               NOT NULL COMMENT '用户 ID',
+    targetId      bigint                               NOT NULL COMMENT '被点赞内容的ID',
+    targetType    tinyint                              NOT NULL COMMENT '内容类型：1-图片 2-帖子 3-空间',
+    targetUserId  bigint                               NOT NULL COMMENT '被点赞内容所属用户ID',
+    isLiked       tinyint(1)                           NOT NULL COMMENT '是否点赞',
+    firstLikeTime datetime   DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '第一次点赞时间',
+    lastLikeTime  datetime                             NOT NULL COMMENT '最近一次点赞时间',
+    isRead        tinyint(1) DEFAULT 0                 NOT NULL COMMENT '是否已读（0-未读，1-已读）',
+    CONSTRAINT uk_user_target
+        UNIQUE (userId, targetId, targetType)
+)
+    COMMENT '通用点赞表' COLLATE = utf8mb4_unicode_ci;
+
+ALTER TABLE like_record MODIFY COLUMN isLiked BOOLEAN NOT NULL COMMENT '是否点赞';

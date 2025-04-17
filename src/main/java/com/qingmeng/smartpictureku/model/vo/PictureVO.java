@@ -116,6 +116,11 @@ public class PictureVO implements Serializable {
     private String picColor;
 
     /**
+     * 点赞数
+     */
+    private Long likeCount;
+
+    /**
      * 权限列表
      */
     private List<String> permissionList = new ArrayList<>();

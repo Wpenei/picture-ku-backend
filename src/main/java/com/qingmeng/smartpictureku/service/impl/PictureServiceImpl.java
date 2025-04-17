@@ -36,7 +36,6 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -85,7 +84,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
 
     @Resource
     private Executor pictureKuExecutor;
-    @Autowired
+
+    @Resource
     private AliYunAiApi aliYunAiApi;
 
     /**
@@ -472,8 +472,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
     /**
      * 获取查询条件
      *
-     * @param pictureQueryRequest
-     * @return
+     * @param pictureQueryRequest 图片查询对象
+     * @return 图片查询条件
      */
     @Override
     public QueryWrapper<Picture> getQueryWrapper(PictureQueryRequest pictureQueryRequest) {
@@ -487,10 +487,6 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         Long picSize = pictureQueryRequest.getPicSize();
         Integer picWidth = pictureQueryRequest.getPicWidth();
         Integer picHeight = pictureQueryRequest.getPicHeight();
-//        Integer picMinHeight = pictureQueryRequest.getPicMinHeight();
-//        Integer picMaxHeight = pictureQueryRequest.getPicMaxHeight();
-//        Integer picMinWidth = pictureQueryRequest.getPicMinWidth();
-//        Integer picMaxWidth = pictureQueryRequest.getPicMaxWidth();
         Double picScale = pictureQueryRequest.getPicScale();
         String picFormat = pictureQueryRequest.getPicFormat();
         String searchText = pictureQueryRequest.getSearchText();
@@ -527,10 +523,6 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
                 // todo 修改宽度和高度查询
                 .eq(ObjUtil.isNotEmpty(picWidth), Picture::getPicWidth, picWidth)
                 .eq(ObjUtil.isNotEmpty(picHeight), Picture::getPicHeight, picHeight)
-//                .ge(ObjUtil.isNotEmpty(picMinWidth), Picture::getPicWidth, picMinWidth)
-//                .lt(ObjUtil.isNotEmpty(picMaxWidth), Picture::getPicWidth, picMaxWidth)
-//                .ge(ObjUtil.isNotEmpty(picMinHeight), Picture::getPicHeight, picMinHeight)
-//                .lt(ObjUtil.isNotEmpty(picMaxHeight), Picture::getPicHeight, picMaxHeight)
 
                 .eq(ObjUtil.isNotEmpty(picSize), Picture::getPicSize, picSize)
                 .eq(ObjUtil.isNotEmpty(picScale), Picture::getPicScale, picScale)
