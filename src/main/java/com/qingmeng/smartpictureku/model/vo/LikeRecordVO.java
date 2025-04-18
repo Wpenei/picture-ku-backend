@@ -37,7 +37,7 @@ public class LikeRecordVO implements Serializable {
     private Long targetUserId;
 
     /**
-     * 被点赞的内容（根据targetType可能是PictureVO/Post/SpaceVO）
+     * 被点赞的内容（根据targetType可能是PictureVO/Post/CommentVO）
      */
     private Object target;
 

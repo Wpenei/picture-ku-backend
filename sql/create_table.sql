@@ -69,6 +69,11 @@ ALTER TABLE picture
 -- 添加点赞数
 ALTER TABLE picture
     ADD COLUMN likeCount bigint DEFAULT 0 NOT NULL COMMENT '点赞数';
+-- 添加点赞数
+ALTER TABLE picture
+    ADD COLUMN commentCount bigint DEFAULT 0 NOT NULL COMMENT '评论数',
+    ADD COLUMN shareCount   bigint DEFAULT 0 NOT NULL COMMENT '分享数',
+    ADD COLUMN viewCount    bigint DEFAULT 0 NOT NULL COMMENT '浏览量';
 
 
 
@@ -139,8 +144,6 @@ CREATE TABLE category
 )
     COMMENT '分类' COLLATE = utf8mb4_unicode_ci;
 
-
-
 -- 标签表
 CREATE TABLE if not exists tag
 (
@@ -153,6 +156,7 @@ CREATE TABLE if not exists tag
 )
     COMMENT '标签' COLLATE = utf8mb4_unicode_ci;
 
+-- 通用点赞表
 CREATE TABLE like_record
 (
     id            bigint AUTO_INCREMENT COMMENT 'id'   PRIMARY KEY,
@@ -160,7 +164,7 @@ CREATE TABLE like_record
     targetId      bigint                               NOT NULL COMMENT '被点赞内容的ID',
     targetType    tinyint                              NOT NULL COMMENT '内容类型：1-图片 2-帖子 3-空间',
     targetUserId  bigint                               NOT NULL COMMENT '被点赞内容所属用户ID',
-    isLiked       tinyint(1)                           NOT NULL COMMENT '是否点赞',
+    isLiked       boolean                              NOT NULL COMMENT '是否点赞',
     firstLikeTime datetime   DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '第一次点赞时间',
     lastLikeTime  datetime                             NOT NULL COMMENT '最近一次点赞时间',
     isRead        tinyint(1) DEFAULT 0                 NOT NULL COMMENT '是否已读（0-未读，1-已读）',
@@ -169,4 +173,28 @@ CREATE TABLE like_record
 )
     COMMENT '通用点赞表' COLLATE = utf8mb4_unicode_ci;
 
-ALTER TABLE like_record MODIFY COLUMN isLiked BOOLEAN NOT NULL COMMENT '是否点赞';
+-- 评论表
+CREATE TABLE comment
+(
+    id              bigint AUTO_INCREMENT COMMENT 'id'   PRIMARY KEY,
+    userId          bigint                               NOT NULL COMMENT '用户id',
+    targetId        bigint                               NOT NULL COMMENT '评论目标ID',
+    targetType      tinyint    DEFAULT 1                 NOT NULL COMMENT '评论目标类型：1-图片 2-帖子',
+    targetUserId    bigint                               NOT NULL COMMENT '评论目标所属用户ID',
+    content         text                                 NOT NULL COMMENT '评论内容',
+    createTime      datetime   DEFAULT CURRENT_TIMESTAMP NULL COMMENT '创建时间',
+    parentCommentId bigint     DEFAULT 0                 NULL COMMENT '父评论ID,0表示顶级',
+    isDelete        tinyint(1) DEFAULT 0                 NULL COMMENT '是否删除',
+    likeCount       bigint     DEFAULT 0                 NULL COMMENT '点赞数',
+    dislikeCount    bigint     DEFAULT 0                 NULL COMMENT '点踩数',
+    isRead          tinyint(1) DEFAULT 0                 NOT NULL COMMENT '是否已读（0-未读，1-已读）'
+)
+    COMMENT '评论表' COLLATE = utf8mb4_unicode_ci;
+ALTER TABLE comment
+    ADD COLUMN commentCount bigint DEFAULT 0 COMMENT '评论数';
+
+CREATE INDEX idx_target
+    ON comment (targetId, targetType);
+
+CREATE INDEX idx_targetUserId_isRead
+    ON comment (targetUserId, isRead);

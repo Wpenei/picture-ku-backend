@@ -1,5 +1,6 @@
 package com.qingmeng.smartpictureku.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
@@ -10,11 +11,14 @@ import com.qingmeng.smartpictureku.exception.ThrowUtils;
 import com.qingmeng.smartpictureku.mapper.LikeRecordMapper;
 import com.qingmeng.smartpictureku.model.dto.like.LikeQueryRequest;
 import com.qingmeng.smartpictureku.model.dto.like.LikeRequest;
+import com.qingmeng.smartpictureku.model.entity.Comment;
 import com.qingmeng.smartpictureku.model.entity.LikeRecord;
 import com.qingmeng.smartpictureku.model.entity.Picture;
 import com.qingmeng.smartpictureku.model.entity.User;
+import com.qingmeng.smartpictureku.model.vo.CommentVO;
 import com.qingmeng.smartpictureku.model.vo.LikeRecordVO;
 import com.qingmeng.smartpictureku.model.vo.PictureVO;
+import com.qingmeng.smartpictureku.service.CommentService;
 import com.qingmeng.smartpictureku.service.LikeRecordService;
 import com.qingmeng.smartpictureku.service.PictureService;
 import com.qingmeng.smartpictureku.service.UserService;
@@ -49,6 +53,9 @@ public class LikeRecordServiceImpl extends ServiceImpl<LikeRecordMapper, LikeRec
 
     @Resource
     private UserService userService;
+
+    @Resource
+    private CommentService commentService;
     @Resource
     private Executor pictureKuExecutor;
 
@@ -73,8 +80,8 @@ public class LikeRecordServiceImpl extends ServiceImpl<LikeRecordMapper, LikeRec
                         targetId, targetType, isLiked, userId);
                 return CompletableFuture.completedFuture(false);
             }
-            // 2.判断目标类型 1-图片 2-帖子
-            if (targetType != 1 && targetType != 2) {
+            // 2.判断目标类型 1-图片 2-帖子 3-评论
+            if (targetType != 1 && targetType != 2 && targetType != 3) {
                 log.error("Invalid target type: targetType={}", targetType);
                 return CompletableFuture.completedFuture(false);
             }
@@ -148,6 +155,10 @@ public class LikeRecordServiceImpl extends ServiceImpl<LikeRecordMapper, LikeRec
                 //case 2:
                 //    Post post = postService.getById(targetId);
                 //    return post != null ? post.getUserId() : null;
+                // 图片
+                case 3:
+                    Comment comment = commentService.getById(targetId);
+                    return comment != null ? comment.getUserId() : null;
                 default:
                     return null;
             }
@@ -183,6 +194,13 @@ public class LikeRecordServiceImpl extends ServiceImpl<LikeRecordMapper, LikeRec
             //            .update();
             //    updateEsPostLikeCount(targetId, delta);
             //    break;
+            // 图片
+            case 3:
+                commentService.update()
+                        .setSql("likeCount = likeCount + " + delta)
+                        .eq("id", targetId)
+                        .ge("likeCount", -delta)
+                        .update();
             default:
                 log.error("Unsupported target type: {}", targetType);
         }
@@ -306,6 +324,15 @@ public class LikeRecordServiceImpl extends ServiceImpl<LikeRecordMapper, LikeRec
                 //        vo.setTarget(post);
                 //    }
                 //    break;
+                // 图片
+                case 3:
+                    Comment comment = commentService.getById(like.getTargetId());
+                    if (comment != null) {
+                        CommentVO commentVO = new CommentVO();
+                        BeanUtil.copyProperties(comment,commentVO);
+                        vo.setTarget(commentVO);
+                    }
+                    break;
                 default:
                     log.error("Unsupported target type: {}", like.getTargetType());
                     break;

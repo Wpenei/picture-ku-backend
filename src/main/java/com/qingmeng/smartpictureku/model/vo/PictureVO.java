@@ -121,6 +121,21 @@ public class PictureVO implements Serializable {
     private Long likeCount;
 
     /**
+     * 评论数
+     */
+    private Long commentCount;
+
+    /**
+     * 分享数
+     */
+    private Long shareCount;
+
+    /**
+     * 浏览量
+     */
+    private Long viewCount;
+
+    /**
      * 权限列表
      */
     private List<String> permissionList = new ArrayList<>();

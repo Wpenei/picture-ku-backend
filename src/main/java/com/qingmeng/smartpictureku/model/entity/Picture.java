@@ -137,4 +137,19 @@ public class Picture implements Serializable {
      * 点赞数
      */
     private Long likeCount;
+
+    /**
+     * 评论数
+     */
+    private Long commentCount;
+
+    /**
+     * 分享数
+     */
+    private Long shareCount;
+
+    /**
+     * 浏览量
+     */
+    private Long viewCount;
 }

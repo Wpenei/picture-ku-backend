@@ -29,12 +29,15 @@
         <result property="spaceId" column="spaceId"/>
         <result property="picColor" column="picColor"/>
         <result property="likeCount" column="likeCount"/>
+        <result property="commentCount" column="commentCount"/>
+        <result property="shareCount" column="shareCount"/>
+        <result property="viewCount" column="viewCount"/>
     </resultMap>
 
     <sql id="Base_Column_List">
         id,url,thumbnailUrl,name,introduction,category,tags,
         picSize,picWidth,picHeight,picScale,picFormat,likeCount
         userId,spaceId,createTime,editTime,updateTime,isDelete,
-        reviewStatus,reviewMessage,reviewerId,reviewTime,picColor
+        reviewStatus,reviewMessage,reviewerId,reviewTime,picColor,commentCount,shareCount,viewCount
     </sql>
 </mapper>

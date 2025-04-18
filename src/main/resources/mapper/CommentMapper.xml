@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.qingmeng.smartpictureku.mapper.CommentMapper">
+
+    <resultMap id="BaseResultMap" type="com.qingmeng.smartpictureku.model.entity.Comment">
+            <id property="id" column="id" />
+            <result property="userId" column="userId" />
+            <result property="targetId" column="targetId" />
+            <result property="targetType" column="targetType" />
+            <result property="targetUserId" column="targetUserId" />
+            <result property="content" column="content" />
+            <result property="createTime" column="createTime" />
+            <result property="parentCommentId" column="parentCommentId" />
+            <result property="isDelete" column="isDelete" />
+            <result property="likeCount" column="likeCount" />
+            <result property="dislikeCount" column="dislikeCount" />
+            <result property="isRead" column="isRead" />
+            <result property="commentCount" column="commentCount" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,userId,targetId,targetType,targetUserId,content,
+        createTime,parentCommentId,isDelete,likeCount,dislikeCount,
+        isRead,commentCount
+    </sql>
+</mapper>
