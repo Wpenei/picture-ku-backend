@@ -3,7 +3,7 @@ package com.qingmeng.smartpictureku.api.imagesearch.model;
 import lombok.Data;
 
 /**
- * &#064;description: todo 以图搜图返回结果(还未实现)
+ * &#064;description:  以图搜图返回结果
  *
  * @author Wang
  * &#064;date: 2025/3/12

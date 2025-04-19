@@ -10,6 +10,8 @@ import com.qingmeng.smartpictureku.annotation.AuthCheck;
 import com.qingmeng.smartpictureku.api.aliyunai.AliYunAiApi;
 import com.qingmeng.smartpictureku.api.aliyunai.model.CreateTaskResponse;
 import com.qingmeng.smartpictureku.api.aliyunai.model.GetOutPaintingTaskResponse;
+import com.qingmeng.smartpictureku.api.imagesearch.ImageSearchApi;
+import com.qingmeng.smartpictureku.api.imagesearch.model.ImageSearchResult;
 import com.qingmeng.smartpictureku.common.BaseResponse;
 import com.qingmeng.smartpictureku.common.DeleteRequest;
 import com.qingmeng.smartpictureku.common.ResultUtils;
@@ -31,7 +33,6 @@ import com.qingmeng.smartpictureku.model.vo.PictureTagCategory;
 import com.qingmeng.smartpictureku.model.vo.PictureVO;
 import com.qingmeng.smartpictureku.service.*;
 import com.qingmeng.smartpictureku.utils.MultiLevelCacheUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.util.DigestUtils;
 import org.springframework.web.bind.annotation.*;
@@ -82,7 +83,9 @@ public class PictureController {
                     // 缓存 5 分钟移除
                     .expireAfterWrite(5L, TimeUnit.MINUTES)
                     .build();
-    @Autowired
+    @Resource
+    private ImageSearchApi imageSearchApi;
+    @Resource
     private AliYunAiApi aliYunAiApi;
 
 
@@ -352,6 +355,21 @@ public class PictureController {
     }
 
     /**
+     * 批量修改图片信息
+     * @param pictureEditByBatchRequest
+     * @param request
+     * @return
+     */
+    @PostMapping("/edit/batch")
+    @SaSpaceCheckPermission(value = SpaceUserPermissionConstant.PICTURE_EDIT)
+    public BaseResponse<Boolean> editPictureByBatch(@RequestBody PictureEditByBatchRequest pictureEditByBatchRequest, HttpServletRequest request) {
+        ThrowUtils.throwIf(pictureEditByBatchRequest == null, ErrorCode.PARAMS_ERROR);
+        User loginUser = userService.getLoginUser(request);
+        pictureService.editPictureByBatch(pictureEditByBatchRequest, loginUser);
+        return ResultUtils.success(true);
+    }
+
+    /**
      * 获取标签和分类
      *
      * @return 分类标签对象
@@ -379,7 +397,6 @@ public class PictureController {
         return ResultUtils.success(cacheValue);
     }
 
-
     /**
      * 从缓存中 分页脱敏后的图片列表
      *
@@ -398,7 +415,6 @@ public class PictureController {
         ThrowUtils.throwIf(pageSize > 20, ErrorCode.PARAMS_ERROR, "查询数据过多");
         // 普通用户只能看到过审的图片
         pictureQueryRequest.setReviewStatus(PictureReviewStatusEnum.PASS.getValue());
-
 
         // 1.构建缓存key
         // 将查询参数转换为json字符串,作为缓存key
@@ -443,19 +459,26 @@ public class PictureController {
     }
 
     /**
-     * 批量修改图片信息
-     * @param pictureEditByBatchRequest
-     * @param request
-     * @return
+     * 以图搜图
+     * @param searchPictureByPictureRequest 以图搜图请求对象
+     * @return 结果列表
      */
-    @PostMapping("/edit/batch")
-    @SaSpaceCheckPermission(value = SpaceUserPermissionConstant.PICTURE_EDIT)
-    public BaseResponse<Boolean> editPictureByBatch(@RequestBody PictureEditByBatchRequest pictureEditByBatchRequest, HttpServletRequest request) {
-        ThrowUtils.throwIf(pictureEditByBatchRequest == null, ErrorCode.PARAMS_ERROR);
-        User loginUser = userService.getLoginUser(request);
-        pictureService.editPictureByBatch(pictureEditByBatchRequest, loginUser);
-        return ResultUtils.success(true);
+    @PostMapping("/search/picture")
+    public BaseResponse<List<ImageSearchResult>> searchPictureByPicture(@RequestBody SearchPictureByPictureRequest searchPictureByPictureRequest) {
+        // 1.校验参数
+        ThrowUtils.throwIf(searchPictureByPictureRequest == null, ErrorCode.PARAMS_ERROR);
+        // 获取图片id
+        Long pictureId = searchPictureByPictureRequest.getId();
+        ThrowUtils.throwIf(pictureId == null || pictureId <= 0, ErrorCode.PARAMS_ERROR);
+        // 根据图片id，获取图片信息
+        Picture picture = pictureService.getById(pictureId);
+        ThrowUtils.throwIf(picture == null, ErrorCode.NOT_FOUND_ERROR);
+        // 根据图片的缩略图URL，搜索相似图片
+        List<ImageSearchResult> resultList = imageSearchApi.searchImage(picture.getThumbnailUrl());
+        return ResultUtils.success(resultList);
     }
+
+
 
     /**
      * 创建AI扩图任务接口

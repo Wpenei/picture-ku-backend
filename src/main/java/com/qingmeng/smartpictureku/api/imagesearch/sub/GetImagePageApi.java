@@ -16,7 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * &#064;description: 第一步:获取以图搜图的结果地址api
+ * &#064;description: step 1 :获取以图搜图的结果地址api
  *
  * @author Wang
  * &#064;date: 2025/3/12
@@ -38,16 +38,16 @@ public class GetImagePageApi {
 
         // 2. 发送POST请求到百度接口
         try {
-            HttpResponse response = HttpRequest.post(url)
-                    .header("acs-token", RandomUtil.randomString(1))
+            HttpResponse httpResponse = HttpRequest.post(url)
+                    .header("acs-token", RandomUtil.randomString(6))
                     .form(formData)
                     .timeout(5000)
                     .execute();
-            if (response.getStatus() != HttpStatus.HTTP_OK){
-                throw new BusinessException(ErrorCode.PARAMS_ERROR, "发送请求时,接口调用失败");
+            if (httpResponse.getStatus() != HttpStatus.HTTP_OK){
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, "接口调用失败");
             }
             // 解析响应
-            String responseBody = response.body();
+            String responseBody = httpResponse.body();
             Map<String ,Object> result = JSONUtil.toBean(responseBody, Map.class);
 
             // 3.处理响应结果
@@ -55,23 +55,24 @@ public class GetImagePageApi {
                 throw new BusinessException(ErrorCode.PARAMS_ERROR, "处理响应结果时,接口调用失败");
             }
             Map<String ,Object> data =(Map<String, Object>) result.get("data");
-            String rawUrl = (String) data.get("url");
             // 对URL进行解析
+            String rawUrl = (String) data.get("url");
             String searchResultUrl = URLUtil.decode(rawUrl, StandardCharsets.UTF_8);
-            if (StrUtil.isNotBlank(searchResultUrl)){
-                throw new BusinessException(ErrorCode.PARAMS_ERROR, "解析URL时,未返回有效结果");
+            if (StrUtil.isBlank(searchResultUrl)){
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, "未返回有效结果地址");
             }
             return searchResultUrl;
 
         }catch (Exception e){
-            log.error("获取图片搜索结果失败",e);
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "接口调用失败");
+            log.error("调用百度以图搜图接口失败",e);
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "搜索失败");
         }
     }
 
     public static void main(String[] args) {
-        String imageUrl = "https://www.codefather.cn/logo.png";
+        String imageUrl = "https%3A%2F%2Fwww.codefather.cn%2Flogo.png";
         String imagePageApi = getImagePageApi(imageUrl);
         System.out.println("搜索结果成功! URL: " + imagePageApi);
     }
+
 }

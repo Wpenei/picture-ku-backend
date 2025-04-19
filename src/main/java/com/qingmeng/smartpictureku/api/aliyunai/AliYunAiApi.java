@@ -27,7 +27,7 @@ public class AliYunAiApi {
     // 创建扩图任务地址
     private static final String OUT_PAINTING_CREATE_TASK_URL = "https://dashscope.aliyuncs.com/api/v1/services/aigc/image2image/out-painting";
 
-    // 获取扩图任务状态地址
+    // 获取任务状态地址
     private static final String GET_TASK_STATUS_URL = "https://dashscope.aliyuncs.com/api/v1/tasks/%s";
 
     // 获取涂鸦绘画任务地址
