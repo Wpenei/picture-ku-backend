@@ -392,6 +392,28 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     }
 
     /**
+     * 判断用户是否登录
+     * @param request
+     * @return
+     */
+    @Override
+    public User isLogin(HttpServletRequest request) {
+        // 判断是否已经登录
+        Object userObj = request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+        User currentUser = (User) userObj;
+        if (currentUser == null || currentUser.getId() == null) {
+            return null;
+        }
+        // 从数据库中查询（追求性能的话可以注释，直接返回上述结果）
+        Long userId = currentUser.getId();
+        currentUser = this.getById(userId);
+        if (currentUser == null) {
+            return null;
+        }
+        return currentUser;
+    }
+
+    /**
      * 更新用户头像
      * @param multipartFile 头像文件
      * @param id 用户id

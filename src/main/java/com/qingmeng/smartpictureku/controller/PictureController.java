@@ -26,7 +26,6 @@ import com.qingmeng.smartpictureku.manager.auth.annotation.SaSpaceCheckPermissio
 import com.qingmeng.smartpictureku.manager.auth.model.SpaceUserPermissionConstant;
 import com.qingmeng.smartpictureku.model.dto.picture.*;
 import com.qingmeng.smartpictureku.model.entity.Picture;
-import com.qingmeng.smartpictureku.model.entity.Space;
 import com.qingmeng.smartpictureku.model.entity.User;
 import com.qingmeng.smartpictureku.model.enums.PictureReviewStatusEnum;
 import com.qingmeng.smartpictureku.model.vo.PictureTagCategory;
@@ -291,29 +290,7 @@ public class PictureController {
     @GetMapping("/get/vo")
     public BaseResponse<PictureVO> getPictureVoById(Long id, HttpServletRequest request) {
         ThrowUtils.throwIf(id == null || id <= 0, ErrorCode.PARAMS_ERROR);
-        // 查询数据库
-        //  todo 如果使用分库分表 ,则修改为必须添加SpaceId
-        //QueryWrapper<Picture> queryWrapper = new QueryWrapper<>();
-        //queryWrapper.eq("id",id);
-        //queryWrapper.eq("spaceId",spaceId);
-        //Picture picture = pictureService.getOne(queryWrapper);
-        Picture picture = pictureService.getById(id);
-        ThrowUtils.throwIf(picture == null, ErrorCode.NOT_FOUND_ERROR);
-        // 空间权限校验
-        Long spaceId = picture.getSpaceId();
-        Space space = null;
-        if (spaceId != null) {
-            // 修改为使用编程式鉴权-- 注解式必须登录用户才可以
-            boolean b = StpKit.SPACE.hasPermission(SpaceUserPermissionConstant.PICTURE_VIEW);
-            ThrowUtils.throwIf(!b, ErrorCode.NO_AUTH_ERROR, "权限不足");
-            space = spaceService.getById(spaceId);
-            ThrowUtils.throwIf(space == null, ErrorCode.NOT_FOUND_ERROR, "空间不存在");
-        }
-        // 获取权限列表
-        User loginUser = userService.getLoginUser(request);
-        List<String> permissionsList = spaceUserAuthManage.getPermissionsList(space, loginUser);
-        PictureVO pictureVO = pictureService.getPictureVO(picture);
-        pictureVO.setPermissionList(permissionsList);
+        PictureVO pictureVO = pictureService.getPictureVOById(id,request);
         return ResultUtils.success(pictureVO);
     }
 

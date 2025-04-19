@@ -7,10 +7,13 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.scheduling.annotation.EnableAsync;
 
-@SpringBootApplication(exclude = {ShardingSphereAutoConfiguration.class})// 关闭分库分表
+/**
+ * @author Wang
+ */
 @EnableAsync
-@MapperScan("com.qingmeng.smartpictureku.mapper")
 @EnableAspectJAutoProxy(exposeProxy = true) // 开启AOP
+@MapperScan("com.qingmeng.smartpictureku.mapper")
+@SpringBootApplication(exclude = {ShardingSphereAutoConfiguration.class})// 关闭分库分表
 public class SmartPictureKuApplication {
 
     public static void main(String[] args) {

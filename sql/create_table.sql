@@ -198,3 +198,18 @@ CREATE INDEX idx_target
 
 CREATE INDEX idx_targetUserId_isRead
     ON comment (targetUserId, isRead);
+
+CREATE TABLE message
+(
+    id         bigint AUTO_INCREMENT COMMENT '主键ID'
+        PRIMARY KEY,
+    content    text                                 NOT NULL COMMENT '留言内容',
+    createTime datetime   DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+    updateTime datetime   DEFAULT CURRENT_TIMESTAMP NOT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    isDelete   tinyint(1) DEFAULT 0                 NULL COMMENT '是否删除(0-未删除 1-已删除)',
+    ip         varchar(50)                          NULL COMMENT 'IP地址'
+)
+    COMMENT '留言板表' COLLATE = utf8mb4_unicode_ci;
+
+CREATE INDEX idx_createTime
+    ON message (createTime);

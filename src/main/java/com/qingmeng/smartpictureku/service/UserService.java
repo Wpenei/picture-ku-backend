@@ -151,4 +151,9 @@ public interface UserService extends IService<User> {
      * @param userId 用户id
      */
     void asyncDeleteUserData(Long userId, HttpServletRequest request);
+
+    /**
+     * 判断是否是登录态
+     */
+    User isLogin(HttpServletRequest request);
 }

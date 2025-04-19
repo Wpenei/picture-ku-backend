@@ -136,6 +136,16 @@ public class PictureVO implements Serializable {
     private Long viewCount;
 
     /**
+     * 当前用户是否点赞
+     */
+    private Integer isLiked;
+
+    /**
+     * 当前用户是否分享
+     */
+    //private Integer isShared;
+
+    /**
      * 权限列表
      */
     private List<String> permissionList = new ArrayList<>();

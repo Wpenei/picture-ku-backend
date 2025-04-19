@@ -16,6 +16,10 @@ import com.qingmeng.smartpictureku.exception.BusinessException;
 import com.qingmeng.smartpictureku.exception.ErrorCode;
 import com.qingmeng.smartpictureku.exception.ThrowUtils;
 import com.qingmeng.smartpictureku.manager.CosManager;
+import com.qingmeng.smartpictureku.manager.CrawlerManager;
+import com.qingmeng.smartpictureku.manager.auth.SpaceUserAuthManage;
+import com.qingmeng.smartpictureku.manager.auth.StpKit;
+import com.qingmeng.smartpictureku.manager.auth.model.SpaceUserPermissionConstant;
 import com.qingmeng.smartpictureku.manager.pictureupload.FilePictureUpload;
 import com.qingmeng.smartpictureku.manager.pictureupload.PictureUploadTemplate;
 import com.qingmeng.smartpictureku.manager.pictureupload.UrlPictureUpload;
@@ -27,6 +31,7 @@ import com.qingmeng.smartpictureku.model.entity.Space;
 import com.qingmeng.smartpictureku.model.entity.User;
 import com.qingmeng.smartpictureku.model.enums.PictureReviewStatusEnum;
 import com.qingmeng.smartpictureku.model.vo.PictureVO;
+import com.qingmeng.smartpictureku.service.LikeRecordService;
 import com.qingmeng.smartpictureku.service.PictureService;
 import com.qingmeng.smartpictureku.service.SpaceService;
 import com.qingmeng.smartpictureku.service.UserService;
@@ -36,6 +41,8 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -87,6 +94,19 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
 
     @Resource
     private AliYunAiApi aliYunAiApi;
+
+    @Resource
+    private SpaceUserAuthManage spaceUserAuthManage;
+
+    @Resource
+    @Lazy
+    private LikeRecordService likeRecordService;
+
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
+
+    @Resource
+    private CrawlerManager crawlerManager;
 
     /**
      * 上传图片
@@ -551,9 +571,17 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
      * @return
      */
     @Override
-    public PictureVO getPictureVO(Picture picture) {
+    public PictureVO getPictureVO(Picture picture ,HttpServletRequest request) {
         ThrowUtils.throwIf(picture == null, ErrorCode.PARAMS_ERROR);
+
+        // 增加浏览量
+        incrementViewCount(picture.getId(), request);
+
         PictureVO pictureVO = PictureVO.objToVo(picture);
+
+        // 设置实时浏览量
+        pictureVO.setViewCount(getViewCount(picture.getId()));
+
         // 关联查询用户信息
         Long userId = pictureVO.getUserId();
         if (userId != null) {
@@ -562,7 +590,79 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
                 pictureVO.setUserVO(userService.getUserVO(user));
             }
         }
+        // 设置点赞状态 - 使用新的通用点赞表
+        User loginUser = userService.getLoginUser(request);
+        if (loginUser != null) {
+            // 使用 LikeRecordService 的方法来检查点赞状态
+            boolean isLiked = likeRecordService.isContentLiked(picture.getId(), 1, loginUser.getId());
+            pictureVO.setIsLiked(isLiked ? 1 : 0);
+            // 获取分享状态
+            //boolean isShared = shareRecordService.isContentShared(picture.getId(), 1, loginUser.getId());
+            //pictureVO.setIsShared(isShared ? 1 : 0);
+        } else {
+            pictureVO.setIsLiked(0);
+            //pictureVO.setIsShared(0);
+        }
         return pictureVO;
+    }
+
+    /**
+     * 获取图片浏览量
+     */
+    @Override
+    public long getViewCount(Long pictureId) {
+        // 先从 Redis 获取增量
+        String viewCountKey = String.format("picture:viewCount:%d", pictureId);
+        String incrementCount = stringRedisTemplate.opsForValue().get(viewCountKey);
+
+        // 从数据库获取基础浏览量
+        Picture picture = this.getById(pictureId);
+        if (picture == null) {
+            return 0L;
+        }
+
+        // 合并数据库和 Redis 的浏览量
+        long baseCount = picture.getViewCount() != null ? picture.getViewCount() : 0L;
+        long increment = incrementCount != null ? Long.parseLong(incrementCount) : 0L;
+
+        return baseCount + increment;
+    }
+
+    /**
+     * 增加图片浏览量
+     */
+    private void incrementViewCount(Long pictureId, HttpServletRequest request) {
+        // 检查是否需要增加浏览量
+        if (!crawlerManager.detectViewRequest(request, pictureId)) {
+            return;
+        }
+
+        // 使用 Redis 进行计数
+        String viewCountKey = String.format("picture:viewCount:%d", pictureId);
+        String lockKey = String.format("picture:viewCount:lock:%d", pictureId);
+
+        try {
+            // 获取分布式锁
+            Boolean locked = stringRedisTemplate.opsForValue().setIfAbsent(lockKey, "1", 10, TimeUnit.SECONDS);
+            if (Boolean.TRUE.equals(locked)) {
+                // 增加浏览量
+                stringRedisTemplate.opsForValue().increment(viewCountKey);
+
+                // 当浏览量达到一定阈值时，更新数据库
+                String viewCountStr = stringRedisTemplate.opsForValue().get(viewCountKey);
+                if (viewCountStr != null && Long.parseLong(viewCountStr) % 100 == 0) {
+                    this.update()
+                            .setSql("viewCount = viewCount + " + viewCountStr)
+                            .eq("id", pictureId)
+                            .update();
+                    // 更新后重置 Redis 计数
+                    stringRedisTemplate.delete(viewCountKey);
+                }
+            }
+        } finally {
+            // 释放锁
+            stringRedisTemplate.delete(lockKey);
+        }
     }
 
     /**
@@ -777,6 +877,31 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
 
         // 创建任务 并返回
         return  aliYunAiApi.createOutPaintingTask(taskRequest);
+    }
+
+    @Override
+    public PictureVO getPictureVOById(Long id, HttpServletRequest request) {
+        // 查询数据库
+        Picture picture = this.getById(id);
+        ThrowUtils.throwIf(picture == null, ErrorCode.NOT_FOUND_ERROR);
+        // 空间权限校验
+        Long spaceId = picture.getSpaceId();
+        Space space = null;
+        if (spaceId != null) {
+            // 修改为使用编程式鉴权-- 注解式必须登录用户才可以
+            boolean b = StpKit.SPACE.hasPermission(SpaceUserPermissionConstant.PICTURE_VIEW);
+            ThrowUtils.throwIf(!b, ErrorCode.NO_AUTH_ERROR, "权限不足");
+            space = spaceService.getById(spaceId);
+            ThrowUtils.throwIf(space == null, ErrorCode.NOT_FOUND_ERROR, "空间不存在");
+        }
+        // 获取权限列表
+        User loginUser = userService.getLoginUser(request);
+        List<String> permissionsList = spaceUserAuthManage.getPermissionsList(space, loginUser);
+
+        // 构造返回值
+        PictureVO pictureVO = this.getPictureVO(picture,request);
+        pictureVO.setPermissionList(permissionsList);
+        return pictureVO;
     }
 
     /**

@@ -99,7 +99,14 @@ public interface PictureService extends IService<Picture> {
      * @param picture
      * @return
      */
-    PictureVO getPictureVO(Picture picture);
+    PictureVO getPictureVO(Picture picture,HttpServletRequest request);
+
+    /**
+     * 获取图片浏览量
+     * @param pictureId 图片id
+     * @return 图片浏览量
+     */
+    long getViewCount(Long pictureId);
 
     /**
      * 获取分页查询结果(封装后的)
@@ -138,4 +145,9 @@ public interface PictureService extends IService<Picture> {
      * @return
      */
     CreateTaskResponse createOutPaintingTask(CreatePictureOutPaintingTaskRequest createPictureOutPaintingTaskRequest, User loginUser);
+
+    /**
+     * 根据ID获取图片VO
+     */
+    PictureVO getPictureVOById(Long id, HttpServletRequest request);
 }
