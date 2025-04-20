@@ -7,7 +7,10 @@ import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/** MyBatisPlus 分页配置类 */
+/**
+ *  MyBatisPlus 分页配置类
+ * @author Wang
+ *  */
 @Configuration
 @MapperScan("com.qingmeng.smartpictureku.mapper")
 public class MybatisPlusConfig {

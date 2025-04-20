@@ -66,7 +66,7 @@ public class LikeRecordServiceImpl extends ServiceImpl<LikeRecordMapper, LikeRec
      * @return
      */
     @Override
-    @Async
+    @Async("pictureKuExecutor")
     @Transactional(rollbackFor = Exception.class)
     public CompletableFuture<Boolean> doLike(LikeRequest likeRequest, Long userId) {
         try {

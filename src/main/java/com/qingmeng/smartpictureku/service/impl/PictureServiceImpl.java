@@ -403,7 +403,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
      *
      * @param oldPicture
      */
-    @Async
+    @Async("pictureKuExecutor")
     @Override
     public void clearPictureFile(Picture oldPicture) {
         // 判断图片是否被多条记录使用

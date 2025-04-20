@@ -84,7 +84,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
      * @param type 类型
      * @param request 请求
      */
-    @Async
+    @Async("pictureKuExecutor")
     @Override
     public void sendEmailCode(String email, String type, HttpServletRequest request) {
         // 1.校验参数
@@ -624,7 +624,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
      * 用户注销
      * @param userId 用户id
      */
-    @Async
+    @Async("pictureKuExecutor")
     @Override
     public void asyncDeleteUserData(Long userId, HttpServletRequest request){
         try {

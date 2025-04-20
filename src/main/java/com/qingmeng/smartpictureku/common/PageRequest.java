@@ -2,6 +2,10 @@ package com.qingmeng.smartpictureku.common;
 
 import lombok.Data;
 
+/**
+ * 分页请求对象
+ * @author Wang
+ */
 @Data
 public class PageRequest {
 

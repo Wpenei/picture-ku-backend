@@ -1,6 +1,8 @@
 package com.qingmeng.smartpictureku.config;
 
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.util.concurrent.Executor;
@@ -11,7 +13,9 @@ import java.util.concurrent.ThreadPoolExecutor;
 * @author Wang
 * &#064;date: 2025/3/12
 */
-public class SpringAsyncConfig {
+@Configuration
+@EnableAsync
+public class AsyncConfig {
     @Bean("pictureKuExecutor")
     public Executor threadPoolTaskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();

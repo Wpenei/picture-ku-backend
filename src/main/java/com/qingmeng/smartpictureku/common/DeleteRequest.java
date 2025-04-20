@@ -4,6 +4,10 @@ import lombok.Data;
 
 import java.io.Serializable;
 
+/**
+ * 删除请求对象
+ * @author Wang
+ */
 @Data
 public class DeleteRequest implements Serializable {
 

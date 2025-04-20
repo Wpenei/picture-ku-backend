@@ -2,6 +2,10 @@ package com.qingmeng.smartpictureku.common;
 
 import com.qingmeng.smartpictureku.exception.ErrorCode;
 
+/**
+ * 统一响应工具类
+ * @author Wang
+ */
 public class ResultUtils {
 
     /**

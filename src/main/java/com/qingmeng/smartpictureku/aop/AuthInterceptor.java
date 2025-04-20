@@ -18,7 +18,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import javax.servlet.http.HttpServletRequest;
 
 /**
- * &#064;description: 权限校验切面类
+ * &#064;description: 用户权限校验切面类
  * @author Wang
  * &#064;date  2025/3/2
  */

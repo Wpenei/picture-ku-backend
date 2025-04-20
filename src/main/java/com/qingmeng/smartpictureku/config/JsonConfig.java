@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper; // 添加这行
 /**
  * Spring MVC Json 配置
  * 修复数据精度丢失的问题
+ * @author Wang
  */
 @JsonComponent
 public class JsonConfig {
