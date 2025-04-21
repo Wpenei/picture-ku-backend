@@ -312,7 +312,11 @@ public class PictureController {
         ThrowUtils.throwIf(pageSize > 40, ErrorCode.PARAMS_ERROR, "查询数据过多");
         if (spaceId == null) {
             // 普通用户只能看到过审的图片
-            pictureQueryRequest.setReviewStatus(PictureReviewStatusEnum.PASS.getValue());
+            if (pictureQueryRequest.getReviewStatus() == null){
+                pictureQueryRequest.setReviewStatus(PictureReviewStatusEnum.PASS.getValue());
+            }else if(pictureQueryRequest.getReviewStatus().equals(10)){
+                pictureQueryRequest.setReviewStatus(null);
+            }
             pictureQueryRequest.setNullSpaceId(true);
         } else {
             // 私有图库,只有空间创建人可以查看

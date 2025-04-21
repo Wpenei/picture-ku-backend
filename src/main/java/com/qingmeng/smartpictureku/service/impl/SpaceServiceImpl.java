@@ -323,6 +323,9 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
                 .eq("userId", userId)
                 .eq("spaceType", 0);
         Space space = this.getOne(spaceQueryWrapper);
+        if (space == null){
+            return null;
+        }
         return SpaceVO.objToVo(space);
     }
 

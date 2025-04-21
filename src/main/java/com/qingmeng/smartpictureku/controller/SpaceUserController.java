@@ -145,18 +145,37 @@ public class SpaceUserController {
     }
 
     /**
-     * 查询我加入的空间列表
+     * 查询用户加入的团队空间
      * @param request
      * @return
      */
-    @PostMapping("/list/my")
-    public BaseResponse<List<SpaceUserVO>> listMySpace(HttpServletRequest request) {
+    @PostMapping("/list/my_create")
+    public BaseResponse<List<SpaceUserVO>> listMyCreateTeamSpace(HttpServletRequest request) {
         // 获取登录用户
         User loginUser = userService.getLoginUser(request);
-        SpaceUserQueryRequest spaceUserQueryRequest = new SpaceUserQueryRequest();
-        spaceUserQueryRequest.setUserId(loginUser.getId());
-        List<SpaceUser> spaceUserList = spaceUserService.list(
-                spaceUserService.getQueryWrapper(spaceUserQueryRequest));
+        if (loginUser == null) {
+            return null;
+        }
+        // 获取用户加入的团队空间
+        List<SpaceUser> spaceUserList = spaceUserService.listMyCreateSpace(loginUser.getId());
+        // 封装返回结果
+        return ResultUtils.success(spaceUserService.getSpaceUserVoList(spaceUserList));
+    }
+    /**
+     * 查询用户加入的团队空间
+     * @param request
+     * @return
+     */
+    @PostMapping("/list/my_join")
+    public BaseResponse<List<SpaceUserVO>> listMyJoinTeamSpace(HttpServletRequest request) {
+        // 获取登录用户
+        User loginUser = userService.getLoginUser(request);
+        if (loginUser == null) {
+            return null;
+        }
+        // 获取用户加入的团队空间
+        List<SpaceUser> spaceUserList = spaceUserService.listMyJoinSpace(loginUser.getId());
+        // 封装返回结果
         return ResultUtils.success(spaceUserService.getSpaceUserVoList(spaceUserList));
     }
 }

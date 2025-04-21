@@ -102,7 +102,7 @@ public class PictureQueryRequest extends PageRequest implements Serializable {
     private Long userId;
 
     /**
-     * 审核状态：0-审核中; 1-通过; 2-拒绝
+     * 审核状态：0-审核中; 1-通过; 2-拒绝 ;10-全部
      */
     private Integer reviewStatus;
 

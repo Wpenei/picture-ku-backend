@@ -201,7 +201,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         // 使用 Hutool 的 MD5 加密
         String encryptedCaptcha = DigestUtil.md5Hex(captchaCode);
 
-        // 将加密后的验证码和 Base64 编码的图片存储到 Redis 中，设置过期时间为 5 分钟（300 秒）
+        // 将加密后的验证码和 Base64 编码的图片存储到 Redis 中，设置过期时间为 1 分钟（60 秒）
         stringRedisTemplate.opsForValue().set("captcha:" + encryptedCaptcha, captchaCode, 60, TimeUnit.SECONDS);
 
         Map<String, String> data = new HashMap<>();
@@ -219,11 +219,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     @Override
     public boolean checkCaptcha(String userInputCaptcha, String serverVerifyCode) {
         // 1.校验参数
-        ThrowUtils.throwIf(StrUtil.hasBlank(userInputCaptcha,serverVerifyCode), ErrorCode.PARAMS_ERROR, "参数为空");
+        ThrowUtils.throwIf(StrUtil.hasBlank(userInputCaptcha,serverVerifyCode), ErrorCode.PARAMS_ERROR, "验证码不能为空");
         // 2.校验验证码
         // 将用户输入的验证码使用MD5加密
         String encryptedUserInputCaptcha = DigestUtil.md5Hex(userInputCaptcha);
-        return encryptedUserInputCaptcha.equals(serverVerifyCode);
+        boolean success = encryptedUserInputCaptcha.equals(serverVerifyCode);
+        // 验证成功后删除验证码
+        if (success){
+            stringRedisTemplate.delete("captcha:" + serverVerifyCode);
+        }
+        return success;
     }
 
     /**
@@ -378,12 +383,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         // 1.2.将对象转换为用户类型
         User currentUser = (User) userobj;
         if (currentUser == null){
-            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
+            return null;
+            //throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
         }
         Long userId = currentUser.getId();
-        if ( userId == null){
-            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
-        }
+        //if ( userId == null){
+        //    throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
+        //}
         // 2.根据id查询数据库,并返回
         currentUser = this.getById(userId);
         // 这里查询的数据库中没有,可能是用户被删除了(为了友好提示,显示用户未登录)

@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.qingmeng.smartpictureku.exception.BusinessException;
 import com.qingmeng.smartpictureku.exception.ErrorCode;
 import com.qingmeng.smartpictureku.exception.ThrowUtils;
+import com.qingmeng.smartpictureku.manager.auth.SpaceUserAuthManage;
 import com.qingmeng.smartpictureku.mapper.SpaceUserMapper;
 import com.qingmeng.smartpictureku.model.dto.spaceuser.SpaceUserAddRequest;
 import com.qingmeng.smartpictureku.model.dto.spaceuser.SpaceUserQueryRequest;
@@ -47,6 +48,11 @@ public class SpaceUserServiceImpl extends ServiceImpl<SpaceUserMapper, SpaceUser
 
     @Resource
     private UserService userService;
+
+    @Resource
+    @Lazy
+    private SpaceUserAuthManage spaceUserAuthManage;
+
     /**
      * 添加空间用户
      * @param spaceUserAddRequest
@@ -170,8 +176,9 @@ public class SpaceUserServiceImpl extends ServiceImpl<SpaceUserMapper, SpaceUser
         Set<Long> spaceIdSet = spaceUserList.stream().map(SpaceUser::getSpaceId).collect(Collectors.toSet());
         // 批量查询用户信息
         Map<Long, List<User>> userIdUserListMap = userService.listByIds(userIdSet).stream().collect(Collectors.groupingBy(User::getId));
-        Map<Long, List<Space>> spaceIdSpaceListMap = spaceService.listByIds(spaceIdSet).stream()
-                .collect(Collectors.groupingBy(Space::getId));
+        Map<Long, List<SpaceVO>> spaceIdSpaceListMap = spaceService.listByIds(spaceIdSet).stream()
+                .map(SpaceVO::objToVo)
+                .collect(Collectors.groupingBy(SpaceVO::getId));
         // 填充信息
         spaceVoList.forEach(spaceUserVO  -> {
             Long userId = spaceUserVO.getUserId();
@@ -182,13 +189,40 @@ public class SpaceUserServiceImpl extends ServiceImpl<SpaceUserMapper, SpaceUser
             }
             spaceUserVO.setUserVO(userService.getUserVO(user));
             // 填充空间信息
-            Space space = null;
+            SpaceVO spaceVO = null;
             if (spaceIdSpaceListMap.containsKey(spaceId)) {
-                space = spaceIdSpaceListMap.get(spaceId).get(0);
+                spaceVO = spaceIdSpaceListMap.get(spaceId).get(0);
+                spaceVO.setUserVO(userService.getUserVO(userService.getById(spaceVO.getUserId())));
+                spaceVO.setPermissionList(spaceUserAuthManage.getPermissionsByRole(spaceUserVO.getSpaceRole()));
             }
-            spaceUserVO.setSpaceVO(SpaceVO.objToVo(space));
+            spaceUserVO.setSpaceVO(spaceVO);
         });
         return spaceVoList;
+    }
+
+    /**
+     * 查询用户加入的团队空间（排除用户自己创建的）
+     * @param userId 用户id
+     * @return 用户加入的团队空间列表
+     */
+    @Override
+    public List<SpaceUser> listMyCreateSpace(Long userId){
+        // 1.校验参数
+        ThrowUtils.throwIf(userId == null, ErrorCode.PARAMS_ERROR);
+        // 2.根据用户id查询用户加入的团队空间
+        return this.baseMapper.selectSpaceUserByUserIdCreate(userId);
+    }
+    /**
+     * 查询用户加入的团队空间（排除用户自己创建的）
+     * @param userId 用户id
+     * @return 用户加入的团队空间列表
+     */
+    @Override
+    public List<SpaceUser> listMyJoinSpace(Long userId){
+        // 1.校验参数
+        ThrowUtils.throwIf(userId == null, ErrorCode.PARAMS_ERROR);
+        // 2.根据用户id查询用户加入的团队空间
+        return this.baseMapper.selectSpaceUserByUserIdJoin(userId);
     }
 }
 
